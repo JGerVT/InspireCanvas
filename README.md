@@ -1,1 +1,1 @@
-# InspireCanvas
+# Inspire Canvas

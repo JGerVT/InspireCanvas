@@ -44,7 +44,7 @@ class MainContent(QWidget):
         # Layouts
         vLayout = QVBoxLayout(self)
         vLayout.addWidget(self.topBar)  # Add Top Bar
-        vLayout.addWidget(self.canvas)  # Add Canvas
+        vLayout.addWidget(self.canvas)  # Add Canvas 
         LayoutRemoveSpacing(vLayout)
 
         # Signals
