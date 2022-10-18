@@ -1,0 +1,67 @@
+{
+    "Project":{
+        "projectName": "Default",
+        "selectedTab": 0,
+        "canvasSize": [10000,10000],
+        "tabs":[
+            {
+                "tabName": "Tab 1",
+                "tabID": "8b57a45c-5e21-4d65-94ac-a8f7d928b083",
+                "viewportPos": [2500, 2500],
+                "viewportZoom": 1,
+                "tabColor": "#23A0FF",
+                "canvasItems":[
+                    {
+                        "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
+                        "itemPos": [2200,2090],
+                        "itemScale": 1
+                    },
+                    {
+                        "nodeID": "eb5446af-ab22-4e0e-8220-0147ac468b6c",
+                        "itemPos": [2600,2350],
+                        "itemScale": 1.2
+                    }
+                ]
+            },
+            {
+                "tabName": "Tab 2",
+                "tabID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
+                "viewportPos": [2500, 2500],
+                "viewportZoom": 1,
+                "tabColor": "#23A0FF",
+                "canvasItems":[
+                    {
+                        "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
+                        "itemPos": [110,20],
+                        "itemScale": 0.5
+                    }
+                ]
+            },
+            {
+                "tabName": "Tab 3",
+                "tabID": "eb5496af-ab22-4e0e-8220-0147ac469b6c",
+                "viewportPos": [2500, 2500],
+                "viewportZoom": 1,
+                "tabColor": "#23A0FF",
+                "canvasItems":[
+                ]
+            }
+        ],
+        "nodes":[
+            {
+                "nodeType": "Image_Node",
+                "nodeName": "Waterfall",
+                "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
+                "creationTime": 1664221542,
+                "imagePath": "E:\\OneDrive\\Software Development\\Inspire Canvas 2022 (School Fall 2022)\\Inspire Canvas (Applied Software Fall 2022)\\Resources\\Test Images\\waterfall.jpeg"
+            },
+            {
+                "nodeType": "Image_Node",
+                "nodeName": "Waterfall",
+                "nodeID": "eb5446af-ab22-4e0e-8220-0147ac468b6c",
+                "creationTime": 1664221542,
+                "imagePath": "E:\\OneDrive\\Software Development\\Inspire Canvas 2022 (School Fall 2022)\\Inspire Canvas (Applied Software Fall 2022)\\Resources\\Test Images\\sea.jpg"
+            }
+        ]
+    }
+}
