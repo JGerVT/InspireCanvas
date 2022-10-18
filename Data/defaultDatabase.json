@@ -25,14 +25,14 @@
             },
             {
                 "tabName": "Tab 2",
-                "tabID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
+                "tabID": "8b57a45c-5e21-4d65-94ac-a8f7d9agb083",
                 "viewportPos": [2500, 2500],
                 "viewportZoom": 1,
                 "tabColor": "#23A0FF",
                 "canvasItems":[
                     {
                         "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
-                        "itemPos": [110,20],
+                        "itemPos": [2600,2350],
                         "itemScale": 0.5
                     }
                 ]
