@@ -40,6 +40,7 @@ class MainContent(QWidget):
         # Elements
         self.topBar = MainTopBar(self, tabsData = GetTabs(self.JSONData), projectName = GetProjectName(self.JSONData), selectedTab = GetSelectedTab(self.JSONData))  # Top Bar 
         self.canvas = MainCanvas(self, self.nodeHashTable, canvasSize= self.JSONData["canvasSize"])  # Main Canvas
+        self.zoomButtons = ZoomButtons(self)
 
         # Layouts
         vLayout = QVBoxLayout(self)
@@ -69,6 +70,9 @@ class MainContent(QWidget):
         self.isCanvasEmpty = isCanvasEmpty
         self.update()
 
+    def zoomChanged(self, zoomAmt):
+        self.zoomButtons.setZoomAmt(zoomAmt)
+
     # Events:
     def paintEvent(self, event) -> None:
         """If no items are present, paint text to tell user to drag in file or add item."""
@@ -82,3 +86,116 @@ class MainContent(QWidget):
 
 
         return super().paintEvent(event)
+
+    def resizeEvent(self, event) -> None:        
+        if event.oldSize().height() != self.size().height():    # If Height changed
+            print(event.size().height())
+            self.zoomButtons.setPos(event.size().height())
+
+        return super().resizeEvent(event)
+
+class ZoomButtons(QWidget):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        
+        # References
+        self.mainContent = parent
+
+        # Set Attributes
+        self.setAttribute(Qt.WA_StyledBackground, False) # Allow background color
+        # self.setStyleSheet("background-color: red")
+        self.setFixedHeight(35)
+        self.setFixedWidth(120)
+
+        font = QFont()
+        font.setPointSize(10)
+
+        self.prevText = ""
+
+        # Buttons
+        self.zoomOutButton = QPushButton(self)
+        self.zoomOutButton.setFixedSize(27,26)
+        self.zoomOutButton.setStyleSheet("background-color: #363636; border-radius: 5px; color: white")
+        self.zoomOutButton.setText("-")
+        self.zoomOutButton.setFont(font)
+        self.zoomOutButton.setCursor(Qt.PointingHandCursor)
+
+        self.zoomInButton = QPushButton(self)
+        self.zoomInButton.setStyleSheet("background-color: #363636; border-radius: 5px; color: white")
+        self.zoomInButton.setFixedSize(27,26)
+        self.zoomInButton.setText("+")
+        self.zoomInButton.setFont(font)
+        self.zoomInButton.setCursor(Qt.PointingHandCursor)
+
+
+        # Text
+        self.zoomAMT = ClickableLineEdit(self)
+        self.zoomAMT.setFixedSize(50,26)
+        self.zoomAMT.setStyleSheet("background-color: #363636; border-radius: 5px; color: white; padding-left: 5px; padding-bottom: 2px")
+        self.zoomAMT.setFont(font)
+        self.zoomAMT.setAlignment(Qt.AlignVCenter)
+        self.zoomAMT.setMaxLength(5)
+               
+        # Layout
+        self.hLayout = QHBoxLayout(self)
+        self.hLayout.setSpacing(4)
+        self.hLayout.setContentsMargins(7,0,0,7)
+        self.hLayout.addWidget(self.zoomOutButton)
+        self.hLayout.addWidget(self.zoomInButton)
+        self.hLayout.addWidget(self.zoomAMT)
+
+
+        # Init
+        self.setZoomAmt(1)
+        self.zoomOutButton.pressed.connect(self.zoomOut)
+        self.zoomInButton.pressed.connect(self.zoomIn)
+        self.zoomAMT.clicked.connect(self.textClicked)
+        self.zoomAMT.editingFinished.connect(self.textChange)
+
+    def zoomOut(self):
+        self.mainContent.canvas.AddSubtractZoom(-.25)
+
+    def zoomIn(self):
+        self.mainContent.canvas.AddSubtractZoom(.25)
+
+    def setZoomAmt(self, zoomAmt: int):
+        formattedZoomAmt = str(round(zoomAmt * 100))
+        self.prevText = formattedZoomAmt + "%"
+        self.zoomAMT.setText(self.prevText)
+
+    def textClicked(self):
+        self.zoomAMT.setText("")
+
+    def textChange(self):
+        text = self.zoomAMT.text().removesuffix("%")
+        if text.isdigit():
+            text = int(text)/100
+
+            if text > minMaxZoom[1]:
+                text = minMaxZoom[1]
+            elif text < minMaxZoom[0]:
+                text = minMaxZoom[0]
+
+            self.mainContent.canvas.SetZoomScale(text)
+            self.setZoomAmt(text)
+            
+        else:
+            self.zoomAMT.setText(self.prevText)
+
+        self.zoomAMT.clearFocus()
+
+    def setPos(self, yPos: int):
+        """Sets the vertical position of the Zoom Buttons
+        
+        Args:
+            yPos (int) : height of the window that will set the position of the Zoom Buttons
+        """
+        self.setGeometry(QRect(QPoint(self.pos().x(), yPos - self.height()), self.size()))
+
+
+class ClickableLineEdit(QLineEdit):
+    clicked = Signal()
+    def mousePressEvent(self, event):
+        self.clicked.emit()
+        QLineEdit.mousePressEvent(self, event)
+

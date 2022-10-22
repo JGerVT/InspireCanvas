@@ -230,13 +230,48 @@ class MainCanvas(QGraphicsView):
         return self.transform().m11()
 
     def StoreZoomAmt(self):
-        self.tabData["viewportZoom"] = self.GetZoomScale()
+        zoomAmt = self.GetZoomScale()
+        self.tabData["viewportZoom"] = zoomAmt
+        self.MainContent.zoomChanged(zoomAmt)
 
     def SetZoomScale(self, m11ZoomScale):
+        if m11ZoomScale > minMaxZoom[1]:    # Limit zoom scaling to minMaxZoom
+            m11ZoomScale = minMaxZoom[1]
+        elif m11ZoomScale < minMaxZoom[0]:
+            m11ZoomScale = minMaxZoom[0]
+
         originalTransform = self.transform()
         transform = QTransform(m11ZoomScale, originalTransform.m12(),originalTransform.m13(),originalTransform.m21(),m11ZoomScale,originalTransform.m23(),originalTransform.m31(),originalTransform.m32(),originalTransform.m33())
         QTransform()
         self.setTransform(transform)
+        self.StoreZoomAmt()
+
+    def AddSubtractZoom(self, zoom: float):
+        """Add/Subtract from zoom in scene."""
+        
+        anchor = self.transformationAnchor()    # anchor allows for zoom in on mouse scene position
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
+        prevTransform = self.transform()
+        prevPos = QPoint(self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+
+        self.scale(1+zoom, 1+zoom)
+        self.setTransformationAnchor(anchor)
+
+        if self.GetZoomScale() > minMaxZoom[1]:
+            self.setTransform(prevTransform)
+            self.horizontalScrollBar().setValue(prevPos.x())
+            self.verticalScrollBar().setValue(prevPos.y())
+        elif self.GetZoomScale() < minMaxZoom[0]:
+            self.setTransform(prevTransform)
+            self.horizontalScrollBar().setValue(prevPos.x())
+            self.verticalScrollBar().setValue(prevPos.y())
+
+        # Save changes        
+        self.StoreZoomAmt()
+        self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
+        # self.SetZoomScale(zoomAmt)
+
 
     # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
         """This function ensures that the canvas item stays within the bounds of the scene."""
@@ -353,19 +388,10 @@ class MainCanvas(QGraphicsView):
         
         Zooms in on mouse position on canvas. Code from: https://stackoverflow.com/a/41688654
         """
-        anchor = self.transformationAnchor()    # anchor allows for zoom in on mouse scene position
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-
-        factor = 1.1            
         if event.angleDelta().y() < 0:
-            factor = 0.9
-
-        self.scale(factor, factor)
-        self.setTransformationAnchor(anchor)
-
-        # Save changes        
-        self.StoreZoomAmt()
-        self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
+            self.AddSubtractZoom(-.1)
+        else:
+            self.AddSubtractZoom(.1)
 
 
     def keyPressEvent(self, event) -> None:
