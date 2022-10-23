@@ -8,6 +8,8 @@ Date Updated: 10/15/22
 # --Imports--
 import traceback
 
+from sympy import false
+
 from Settings.settings import *
 
 #Components Used:
@@ -52,6 +54,9 @@ class MainCanvas(QGraphicsView):
         self.canvasSize = canvasSize
         self.canvasItems = []
         self.canvasItemData = [] #Copy of canvas item data. Used for persistent data
+
+        # _____ Rubber Band Selection _____
+        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
         # _____ Main Scene _____
         self.mainScene = MainScene(0,0, self.canvasSize[0], self.canvasSize[1], self)   # Set main Scene
@@ -196,6 +201,28 @@ class MainCanvas(QGraphicsView):
         for node in self.canvasItems:
             node.setZValue(self.canvasItems.index(node))
 
+    def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = false):
+        """Check if an item is under the mouse on the canvas.
+        
+        Arg:
+            pos (QPoint) : check if item is at this position
+            checkSelectionHighlight (bool) : If this is true, check if selection highlight is at pos as well.
+        """
+        itemAtPos = False
+        for item in self.items(pos):
+            if issubclass(type(item), CanvasItem):
+                itemAtPos = True
+            if checkSelectionHighlight and issubclass(type(item), SelectionHighlight):
+                itemAtPos = True
+        return itemAtPos
+
+    def GetCanvasItemsFromList(self, list):
+        tempList = []
+        for item in list:
+            if issubclass(type(item), CanvasItem):
+                tempList.append(item)
+        return tempList
+
     def SetSelectionHighlightPos(self):
         self.selectionHighlight.SelectionChanged(self.selectedItemGroup.childItems())
 
@@ -203,13 +230,48 @@ class MainCanvas(QGraphicsView):
         return self.transform().m11()
 
     def StoreZoomAmt(self):
-        self.tabData["viewportZoom"] = self.GetZoomScale()
+        zoomAmt = self.GetZoomScale()
+        self.tabData["viewportZoom"] = zoomAmt
+        self.MainContent.zoomChanged(zoomAmt)
 
     def SetZoomScale(self, m11ZoomScale):
+        if m11ZoomScale > minMaxZoom[1]:    # Limit zoom scaling to minMaxZoom
+            m11ZoomScale = minMaxZoom[1]
+        elif m11ZoomScale < minMaxZoom[0]:
+            m11ZoomScale = minMaxZoom[0]
+
         originalTransform = self.transform()
         transform = QTransform(m11ZoomScale, originalTransform.m12(),originalTransform.m13(),originalTransform.m21(),m11ZoomScale,originalTransform.m23(),originalTransform.m31(),originalTransform.m32(),originalTransform.m33())
         QTransform()
         self.setTransform(transform)
+        self.StoreZoomAmt()
+
+    def AddSubtractZoom(self, zoom: float):
+        """Add/Subtract from zoom in scene."""
+        
+        anchor = self.transformationAnchor()    # anchor allows for zoom in on mouse scene position
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+
+        prevTransform = self.transform()
+        prevPos = QPoint(self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+
+        self.scale(1+zoom, 1+zoom)
+        self.setTransformationAnchor(anchor)
+
+        if self.GetZoomScale() > minMaxZoom[1]:
+            self.setTransform(prevTransform)
+            self.horizontalScrollBar().setValue(prevPos.x())
+            self.verticalScrollBar().setValue(prevPos.y())
+        elif self.GetZoomScale() < minMaxZoom[0]:
+            self.setTransform(prevTransform)
+            self.horizontalScrollBar().setValue(prevPos.x())
+            self.verticalScrollBar().setValue(prevPos.y())
+
+        # Save changes        
+        self.StoreZoomAmt()
+        self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
+        # self.SetZoomScale(zoomAmt)
+
 
     # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
         """This function ensures that the canvas item stays within the bounds of the scene."""
@@ -224,6 +286,16 @@ class MainCanvas(QGraphicsView):
         """
         self.RemoveAllSelected()
         self.AddSelected(canvasItem)
+
+    def SetSelectedItems(self, canvasItems):
+        """Set multiple canvasItems passed as selected. Removes previous selection
+        
+        Arg:
+            canvasItems: Items to be set as selected
+        """
+        self.RemoveAllSelected()
+        for item in canvasItems:
+            item.AddSelected(True)
 
     def AddSelected(self, canvasItem):
         """Add node to selection. Does not remove previous selection
@@ -259,7 +331,7 @@ class MainCanvas(QGraphicsView):
         self.selectedItemGroup.resetTransform()
 
     #_________ Events _________
-    def mousePressEvent(self, event):      
+    def mousePressEvent(self, event):   
         if event.button() == Qt.MouseButton.MiddleButton:
             self.prevMousePos = event.pos()
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
@@ -267,13 +339,32 @@ class MainCanvas(QGraphicsView):
         elif event.button() == Qt.MouseButton.RightButton:
             return
 
-        self.origin = event.pos()
+        elif event.button() == Qt.MouseButton.LeftButton:
+            self.prevMousePos = event.pos()
+            self.prevSelectedItems = []
+            if not self.isItemAtPos(event.pos(), True):   # If item is at position, show rubber band
+                self.rubberBand.setGeometry(QRect(event.pos(), QSize()))
+                self.rubberBand.show()
 
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         #Pan Scene
-        if event.buttons() == Qt.MiddleButton:
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            if self.rubberBand.isVisible(): # Rubber Band Selector: If no item was clicked and rubber band is visible.
+                rubberBandRect = QRect(self.prevMousePos, event.pos()).normalized()
+                self.rubberBand.setGeometry(rubberBandRect)
+                selectedItems = self.items(rubberBandRect)
+                selectedItems = self.GetCanvasItemsFromList(selectedItems)
+
+                if self.prevSelectedItems != selectedItems:
+                    self.prevSelectedItems = selectedItems
+                    self.SetSelectedItems(selectedItems)
+                # pass
+                return
+            else:
+                return super().mouseMoveEvent(event)
+        elif event.buttons() == Qt.MiddleButton:
             offset = self.prevMousePos - event.pos()
             self.prevMousePos = event.pos()
 
@@ -287,6 +378,8 @@ class MainCanvas(QGraphicsView):
     def mouseReleaseEvent(self, event) -> None:
         self.unsetCursor()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
+        self.rubberBand.hide()
+
         return super().mouseReleaseEvent(event)
 
 
@@ -295,19 +388,10 @@ class MainCanvas(QGraphicsView):
         
         Zooms in on mouse position on canvas. Code from: https://stackoverflow.com/a/41688654
         """
-        anchor = self.transformationAnchor()    # anchor allows for zoom in on mouse scene position
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-
-        factor = 1.1            
         if event.angleDelta().y() < 0:
-            factor = 0.9
-
-        self.scale(factor, factor)
-        self.setTransformationAnchor(anchor)
-
-        # Save changes        
-        self.StoreZoomAmt()
-        self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
+            self.AddSubtractZoom(-.1)
+        else:
+            self.AddSubtractZoom(.1)
 
 
     def keyPressEvent(self, event) -> None:
@@ -392,11 +476,10 @@ class MainScene (QGraphicsScene):
 
     def mouseMoveEvent(self, event) -> None:
         """When the mouse moves, if item under mouse and is selected, drag item"""
-        if len(self.mainView.selectedItemGroup.childItems()) > 0 and self.topWidgetUnderMouse != None and event.buttons() == Qt.MouseButton.LeftButton and self.canDrag:
+        if event.buttons() == Qt.MouseButton.LeftButton and len(self.mainView.selectedItemGroup.childItems()) > 0 and self.topWidgetUnderMouse != None and self.canDrag:
             delta = event.scenePos() - self.prevPos
 
             self.mainView.selectedItemGroup.MoveGroup(delta)
-
         return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:

@@ -22,8 +22,7 @@ from UI_Components.mainContent import *
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
-        '''
-        Main Software Initialization - This is a required function that is called to create a new Window. 
+        '''Main Software Initialization - This is a required function that is called to create a new Window. 
 
         Attributes:
             self.mainTopLayout (QWidget): The central QWidget of the main window
@@ -41,8 +40,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mainContent)
 
     def SetStyleSheet(self, styleLocation):
-        '''
-        Load QSS Theme and set as MainWindow stylesheet
+        '''Load QSS Theme and set as MainWindow stylesheet
 
         Args:
             styleLocation (string): the .qss file location to be set as the MainWindow stylesheet

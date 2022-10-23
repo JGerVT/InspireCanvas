@@ -19,7 +19,7 @@ class CanvasItem(QGraphicsWidget):
         # Set Attributes
         self.setAcceptHoverEvents(False)
         self.setAcceptTouchEvents(False)
-        self.installEventFilter(self)
+        # self.installEventFilter(self)
 
         # References
         self.mainCanvas = parent 

@@ -34,7 +34,7 @@ fontFamily = u"Segoe UI"
 
 # Canvas
 # XYDefaultSize = QSize(5000, 5000)
-minMaxZoom = [.05, 3]
+minMaxZoom = [.05, 5]
 cornerResizeButtonRadius = 4
 minimumImageSize = [100, 100]   # pixels
 defaultImageSize = QSizeF(600, 600)   # Sets the default size of a dragged in image. This ensures that images that are too big default to a smaller size
