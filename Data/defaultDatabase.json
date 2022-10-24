@@ -2,7 +2,7 @@
     "Project":{
         "projectName": "Default",
         "selectedTab": 0,
-        "canvasSize": [10000,10000],
+        "canvasSize": [100000,100000],
         "tabs":[
             {
                 "tabName": "Tab 1",
