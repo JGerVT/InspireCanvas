@@ -19,6 +19,9 @@ class ItemGroup(QGraphicsItemGroup):
         """
         super().__init__(parent)
 
+        # Set Attributes
+        self.setHandlesChildEvents(False)   # This allows children to accept mouse events. Necessary for Text Item 
+
         # References
         self.mainView = mainView
         
@@ -135,3 +138,6 @@ class ItemGroup(QGraphicsItemGroup):
         """Save data for child items. Used for persistent data between tab switches"""
         for item in self.childItems():
             item.SetData()
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        return super().mouseDoubleClickEvent(event)

@@ -15,6 +15,7 @@ from Settings.settings import *
 #Components Used:
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *
 from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
+from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
 
@@ -127,7 +128,12 @@ class MainCanvas(QGraphicsView):
         Returns:
             (ImageCanvasItem): returns created CanvasItem
         """
-        newCanvasItem = ImageCanvasItem(self, canvasItemData)
+        nodeType = self.nodeHashTable[canvasItemData["nodeID"]]["nodeType"]
+
+        if nodeType == "Image_Node":
+            newCanvasItem = ImageCanvasItem(self, canvasItemData)
+        elif nodeType == "Text_Node":
+            newCanvasItem = TextCanvasItem(self, canvasItemData)
 
         self.mainScene.addItem(newCanvasItem)
         self.canvasItems.append(newCanvasItem)
@@ -346,7 +352,7 @@ class MainCanvas(QGraphicsView):
                 self.rubberBand.setGeometry(QRect(event.pos(), QSize()))
                 self.rubberBand.show()
 
-        super().mousePressEvent(event)
+        return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         #Pan Scene
@@ -471,6 +477,7 @@ class MainScene (QGraphicsScene):
             else:                                       # If Shift is not held, set as only selection.
                 self.topWidgetUnderMouse.SetSelected(True)
 
+        print("Scene Click")
 
         return super().mousePressEvent(event)   
 
@@ -494,7 +501,7 @@ class MainScene (QGraphicsScene):
         except:
             pass
         return
-
+        # return super().mouseReleaseEvent(event)
     
     # Drag item over scene
     def dragEnterEvent(self, event) -> None:

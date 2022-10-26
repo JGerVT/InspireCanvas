@@ -20,6 +20,11 @@
                         "nodeID": "eb5446af-ab22-4e0e-8220-0147ac468b6c",
                         "itemPos": [2600,2350],
                         "itemScale": 1.2
+                    },
+                    {
+                        "nodeID": "ab5426af-ab12-2e0e-8220-0147ac468b6c",
+                        "itemPos": [2100,2550],
+                        "itemScale": 1
                     }
                 ]
             },
@@ -61,6 +66,13 @@
                 "nodeID": "eb5446af-ab22-4e0e-8220-0147ac468b6c",
                 "creationTime": 1664221542,
                 "imagePath": "E:\\OneDrive\\Software Development\\Inspire Canvas - Fall 2022\\Inspire Canvas - Applied Software Fall 2022\\Resources\\Test Images\\sea.jpg"
+            },
+            {
+                "nodeType": "Text_Node",
+                "nodeName": "TextBox",
+                "nodeID": "ab5426af-ab12-2e0e-8220-0147ac468b6c",
+                "creationTime": 1666574234,
+                "nodeText": "Text"
             }
         ]
     }
