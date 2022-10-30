@@ -30,10 +30,17 @@ class CanvasItem(QGraphicsWidget):
         self.itemPos = QPointF(canvasItemData["itemPos"][0], canvasItemData["itemPos"][1])
         self.itemScale : float = canvasItemData["itemScale"]
 
+        # Node Data
+        self.nodeData = self.mainCanvas.GetNodeData(self.nodeID) # Get Data by checking database with id
+        self.nodeType = self.nodeData["nodeType"]
+        self.nodeName = self.nodeData["nodeName"]
+        self.creationTime = self.nodeData["creationTime"]
+
         # Properties
         self.isSelected_ = False
         self.initialSceneRect = self.sceneBoundingRect()
         self.initialScale = self.GetScale()
+        self.canDrag = True
 
         self.initialPos = self.scenePos() # This is the offset used when items are moved
 
@@ -44,6 +51,8 @@ class CanvasItem(QGraphicsWidget):
         defaultSize = QSize(720,480)
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()),defaultSize))
 
+    def setCanDrag(self, canDrag):
+        self.canDrag = canDrag
 
     def setInitialPos(self, initialPos):
         self.initialPos = initialPos
@@ -83,6 +92,7 @@ class CanvasItem(QGraphicsWidget):
 
     def SetSelected(self, selected: bool):
         self.isSelected_ = selected
+        self.setCanDrag(True)
 
         if selected:
             self.mainCanvas.SetSelected(self)

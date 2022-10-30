@@ -10,15 +10,10 @@ class ImageCanvasItem(CanvasItem):
         super().__init__(parent, canvasItemData)
 
         # Properties/Data
-        self.nodeData = self.mainCanvas.GetNodeData(self.nodeID) # Get Data by checking database with id
-        self.nodeType = self.nodeData["nodeType"]
-        self.nodeName = self.nodeData["nodeName"]
-        self.creationTime = self.nodeData["creationTime"]
         self.imagePath = self.nodeData["imagePath"]
         self.imageSize = QSize()
 
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
-        # self.pixmapItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
         # Initiation 
         self.setImage(self.imagePath)
