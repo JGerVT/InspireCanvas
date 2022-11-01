@@ -15,6 +15,7 @@ from Settings.settings import *
 #Components Used:
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *
 from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
+from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
 
@@ -40,7 +41,7 @@ class MainCanvas(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.setCacheMode(QGraphicsView.CacheBackground)        
+        self.setCacheMode(QGraphicsView.CacheBackground)                    # Used to improve performance
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.setRenderHint(QPainter.Antialiasing, False)
         self.setFrameStyle(0)
@@ -127,7 +128,12 @@ class MainCanvas(QGraphicsView):
         Returns:
             (ImageCanvasItem): returns created CanvasItem
         """
-        newCanvasItem = ImageCanvasItem(self, canvasItemData)
+        nodeType = self.nodeHashTable[canvasItemData["nodeID"]]["nodeType"]
+
+        if nodeType == "Image_Node":
+            newCanvasItem = ImageCanvasItem(self, canvasItemData)
+        elif nodeType == "Text_Node":
+            newCanvasItem = TextCanvasItem(self, canvasItemData)
 
         self.mainScene.addItem(newCanvasItem)
         self.canvasItems.append(newCanvasItem)
@@ -346,7 +352,7 @@ class MainCanvas(QGraphicsView):
                 self.rubberBand.setGeometry(QRect(event.pos(), QSize()))
                 self.rubberBand.show()
 
-        super().mousePressEvent(event)
+        return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         #Pan Scene
@@ -395,10 +401,13 @@ class MainCanvas(QGraphicsView):
 
 
     def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
+            self.mainScene.keyPressEvent(event)
+            return True
         
-        if event.key() == Qt.Key.Key_Delete:
-            for item in self.selectedItemGroup.childItems():
-                self.RemoveCanvasItem(item)
+    #     if event.key() == Qt.Key.Key_Delete:                    # If Delete key is pressed, delete selected items
+    #         for item in self.selectedItemGroup.childItems():
+    #             self.RemoveCanvasItem(item)
 
         return super().keyPressEvent(event)
 
@@ -427,8 +436,20 @@ class MainScene (QGraphicsScene):
         self.draggingItem = False
         
 
-    # https://stackoverflow.com/a/3839127
-    def mousePressEvent(self, event) -> None:
+    # ------ Utility ------  
+    def onlyOneCanvasItemSelected(self):
+        """Checks to see if only a textbox is selected
+        
+        Returns:
+            Returns the only selected TextCanvasItem
+        """
+        topWidget = self.mainView.selectedItemGroup.childItems()[0]
+        if len(self.mainView.selectedItemGroup.childItems()) == 1:
+            return topWidget
+        return None
+
+    # ------ EVENTS ------
+    def mousePressEvent(self, event) -> None:   # https://stackoverflow.com/a/3839127
         """Mouse clicked on scene"""
 
         self.prevPos = event.scenePos()
@@ -458,10 +479,12 @@ class MainScene (QGraphicsScene):
                 return super().mousePressEvent(event)   
 
         # No item under mouse click, unselect all items. (i.e. when the user clicks on the canvas)
-        if (not self.topWidgetUnderMouse):   
+        if (not self.topWidgetUnderMouse):  
             self.mainView.RemoveAllSelected()
             self.canDrag = False
             return  # Click event has been handled
+
+
 
         # Item is under mouse click.
         if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected() and self.topWidgetUnderMouse.flags() and QGraphicsItem.ItemIsSelectable):
@@ -471,15 +494,21 @@ class MainScene (QGraphicsScene):
             else:                                       # If Shift is not held, set as only selection.
                 self.topWidgetUnderMouse.SetSelected(True)
 
+        # If any items are not set to canDrag, don't allow the user to drag the items
+        for item in self.mainView.selectedItemGroup.childItems():
+            if not item.canDrag:
+                self.canDrag = False
+
+        self.prevTextItem = self.onlyOneCanvasItemSelected()  # This checks if only a textBox is selected
 
         return super().mousePressEvent(event)   
 
     def mouseMoveEvent(self, event) -> None:
         """When the mouse moves, if item under mouse and is selected, drag item"""
         if event.buttons() == Qt.MouseButton.LeftButton and len(self.mainView.selectedItemGroup.childItems()) > 0 and self.topWidgetUnderMouse != None and self.canDrag:
-            delta = event.scenePos() - self.prevPos
-
-            self.mainView.selectedItemGroup.MoveGroup(delta)
+            if type(self.prevTextItem) != TextCanvasItem or type(self.prevTextItem) == TextCanvasItem and not self.prevTextItem.isEditable():
+                delta = event.scenePos() - self.prevPos
+                self.mainView.selectedItemGroup.MoveGroup(delta)
         return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -488,14 +517,25 @@ class MainScene (QGraphicsScene):
 
     def mouseDoubleClickEvent(self, event) -> None:
         """Used to open file when it is double clicked"""
+        if type(self.topWidgetUnderMouse) == TextCanvasItem:
+            self.topWidgetUnderMouse.setIsEditable(True)
+
         try:
             # Open File
             pass
         except:
             pass
         return
-
+        # return super().mouseReleaseEvent(event)
     
+    def keyPressEvent(self, event) -> None:
+        textItem = self.onlyOneCanvasItemSelected()
+        if event.key() == Qt.Key.Key_Delete:                    # If Delete key is pressed, delete selected items
+            if type(textItem) != TextCanvasItem or type(textItem) == TextCanvasItem and not textItem.isEditable():# If there is no text item or the text item is not editable, delete. 
+                for item in self.mainView.selectedItemGroup.childItems():
+                    self.mainView.RemoveCanvasItem(item)
+        return super().keyPressEvent(event)
+
     # Drag item over scene
     def dragEnterEvent(self, event) -> None:
         if event.mimeData().hasUrls() or event.mimeData().hasText(): # Only allow file drags or text drags.
