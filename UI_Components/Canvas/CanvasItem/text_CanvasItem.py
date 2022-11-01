@@ -16,7 +16,6 @@ class TextCanvasItem(CanvasItem):
         # Set Attributes
         self.setMinimumWidth(35)
         self.text = TextBox(self)
-        self.text.setPlainText("TEST")
 
         # Set Properties
         self.canEdit = False
@@ -59,7 +58,6 @@ class TextCanvasItem(CanvasItem):
 
     def updateParentSize(self):
         """Used to update the geometry of the parent item group"""
-
         parent = self.parentItem()
 
         if type(parent) == ItemGroup:
@@ -68,7 +66,6 @@ class TextCanvasItem(CanvasItem):
 
     # ----- Events ----- 
     def mouseDoubleClickEvent(self, event) -> None:
-        print("TEST")
         return super().mouseDoubleClickEvent(event)
 
 
@@ -84,6 +81,10 @@ class TextCanvasItem(CanvasItem):
         painter.restore()
         return 
 
+    def SetData(self):
+        print(self.mainCanvas.nodeHashTable)
+        self.nodeData["nodeText"] = self.text.GetText()
+        return super().SetData()
 
 class TextBox(QGraphicsTextItem):
     def __init__(self, parent, text: str = ""):
@@ -99,6 +100,8 @@ class TextBox(QGraphicsTextItem):
         # Signals
         self.document().contentsChanged.connect(self.ContentChanged)
 
+    def GetText(self):
+        return self.document().toPlainText()
 
     def ResetSelection(self):
         """Remove the selection of the text"""
@@ -112,3 +115,4 @@ class TextBox(QGraphicsTextItem):
         self.textCanvasItem.setSize(self.boundingRect().size())
         self.textCanvasItem.updateParentSize()
         self.textCanvasItem.mainCanvas.SetSelectionHighlightPos()
+        self.textCanvasItem.SetData()
