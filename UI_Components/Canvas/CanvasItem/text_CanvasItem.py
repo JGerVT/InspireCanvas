@@ -82,7 +82,6 @@ class TextCanvasItem(CanvasItem):
         return 
 
     def SetData(self):
-        print(self.mainCanvas.nodeHashTable)
         self.nodeData["nodeText"] = self.text.GetText()
         return super().SetData()
 
