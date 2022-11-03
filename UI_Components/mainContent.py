@@ -38,7 +38,7 @@ class MainContent(QWidget):
         self.nodeHashTable = LoadNodes(self.JSONData)
 
         # Elements
-        self.topBar = MainTopBar(self, tabsData = GetTabs(self.JSONData), projectName = GetProjectName(self.JSONData), selectedTab = GetSelectedTab(self.JSONData))  # Top Bar 
+        self.topBar = MainTopBar(self, tabsData = self.tabHashTable, projectName = GetProjectName(self.JSONData), selectedTab = GetSelectedTab(self.JSONData))  # Top Bar 
         self.canvas = MainCanvas(self, self.nodeHashTable, canvasSize= self.JSONData["canvasSize"])  # Main Canvas
         self.zoomButtons = ZoomButtons(self)
 
