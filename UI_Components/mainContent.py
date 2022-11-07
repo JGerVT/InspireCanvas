@@ -89,7 +89,6 @@ class MainContent(QWidget):
 
     def resizeEvent(self, event) -> None:        
         if event.oldSize().height() != self.size().height():    # If Height changed
-            print(event.size().height())
             self.zoomButtons.setPos(event.size().height())
 
         return super().resizeEvent(event)
