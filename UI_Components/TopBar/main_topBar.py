@@ -10,6 +10,7 @@ Date Updated: 9/28/22
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
+from Utility.ManageJSON import CreateTabItem
 
 # Custom Imports
 from Utility.UtilityFunctions import *
@@ -50,6 +51,7 @@ class MainTopBar(QWidget):
         hLayout = QHBoxLayout(self)
         hLayout.addWidget(self.hamburgerButton)
         hLayout.addWidget(self.TabContainer)
+        hLayout.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
         hLayout.addWidget(self.AddTabButton)
         hLayout.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
         hLayout.addWidget(self.WindowOptions)
@@ -89,22 +91,24 @@ class TabContainer(QWidget):
         """
         super().__init__(parent)
 
-        # Properties
+        # References
         self.MainContent = MainContent
-        self.selectedTab = selectedTab
-        self.tabsData = tabsData
+
 
         # Set Attributes
         self.setObjectName("TabsContainer")
 
+        # Properties and Data
+        self.selectedTabIndex = selectedTab
+        self.selectedTabWidget = None             
+        self.tabsData = tabsData
+
         #Layout
         self.hBoxLayout = QHBoxLayout(self)
         LayoutRemoveSpacing(self.hBoxLayout)
-        # self.hBoxLayout.setSpacing(2)
 
         # Events
         self.MainContent.FinishedInitializing.connect(self.FinishedInitializing)
-
 
         # Add Tabs
         self.AddTabsData(self.tabsData)
@@ -112,34 +116,103 @@ class TabContainer(QWidget):
     def FinishedInitializing(self): 
         """When the main content is all initialized. This function emits a signal when a new tab is selected and calls self.SetSelected to update the canvas"""
         self.SelectTab.connect(self.MainContent.TabSelected)
-        self.SetSelected(self.selectedTab, self.GetTab(self.selectedTab).tabID)
+        self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))
 
     def AddTabsData(self, tabsData):
-        for tab in tabsData:
-            self.AddTab(tab["tabID"], tab["tabName"], tab["tabColor"])
+        for key in tabsData:
+            self.AddTab(tabsData[key]["tabID"], tabsData[key]["tabName"], tabsData[key]["tabColor"], setSelected = False)
 
-    def AddTab(self, tabID, name = "", color = "#23A0FF"):
+    def AddTab(self, tabID, name = "", color = "#23A0FF", setSelected = True):
         tab = Tab(self, tabID, name, color)
         self.hBoxLayout.addWidget(tab)
-        self.SetSelected(self.selectedTab, tabID)
+        if setSelected:
+            self.SetSelectedWidget(tab)
+
+        return tab
+
+    def DeleteTab(self, tabWidget):
+        """Delete a tab from the tab container
+        
+        Args: 
+            tabWidget (QWidget): Tab widget to be deleted
+
+        Returns:
+            If deletion was successful, return True, else return False 
+        """
+        index = self.hBoxLayout.indexOf(tabWidget) 
+        nextTab = None
+        prevTab = None
+
+
+        if self.GetNumberOfTabs() > 1:
+            # Delete widget
+            del self.tabsData[tabWidget.tabID]
+            tabWidget.deleteLater()
+
+            if index < self.GetNumberOfTabs() - 1: # If tab is not last in tab container
+                nextTab = self.GetTab(index + 1)
+            if index - 1 >= 0:                  # If tab is not first in tab container
+                prevTab = self.GetTab(index - 1)
+
+            # Set Selection
+            if self.selectedTabWidget == tabWidget:
+                if nextTab != None:
+                    self.SetSelectedWidget(nextTab)
+                else:
+                    self.SetSelectedWidget(prevTab)
+            else:
+                self.SetSelectedWidget(self.selectedTabWidget)
+            
+            return True
+        else:
+            return False
+
+    def SetSelectedWidget(self, tabWidget):
+        self.selectedTabWidget = tabWidget
+        self.SelectTab.emit(tabWidget.tabID)
+
+        for index in range(self.hBoxLayout.count()):
+            widget = self.hBoxLayout.itemAt(index).widget()
+            if widget == tabWidget:
+                widget.SetSelected(True)
+            else:
+                widget.SetSelected(False)
 
     def GetTab(self, index):
+        """Retrieve a tab widget by it's index in the layout"""
         for ind in range(self.hBoxLayout.count()):
             if self.hBoxLayout.itemAt(index).widget().__class__.__name__ == "Tab":
                 if ind == index:
                     return self.hBoxLayout.itemAt(index).widget()
 
-    def SetSelected(self, selectedIndex, tabID):
-        self.selectedTab = selectedIndex
+    def GetSelectedIndex(self):
+        return self.hBoxLayout.indexOf(self.selectedTabWidget)
 
-        for index in range(self.hBoxLayout.count()):
-            if self.hBoxLayout.itemAt(index).widget().__class__.__name__ == "Tab":
-                if index == selectedIndex:
-                    self.hBoxLayout.itemAt(index).widget().SetSelected(True)
-                else:
-                    self.hBoxLayout.itemAt(index).widget().SetSelected(False)
+    def GetNumberOfTabs(self):
+        return self.hBoxLayout.count()
 
-        self.SelectTab.emit(tabID)
+    def moveTab(self, tabWidget, eventPos):
+        """Move tab when dragged to another index within the hboxlayout
+
+        Args:
+            tabWidget (Tab): Tab to be moved
+            eventPos (QPoint): event position 
+        """
+        index = self.hBoxLayout.indexOf(tabWidget)
+        numberOfTabs = self.GetNumberOfTabs()
+        offset = 60 # Offset for how far into next or previous tab mouse needs to travel before it moves tab
+
+        nextPos = self.mapTo(self, tabWidget.pos()).x() + tabWidget.width() + offset
+        prevPos = self.mapTo(self, tabWidget.pos()).x() - offset
+
+        if eventPos.x() > nextPos and index+1 < numberOfTabs:
+            self.hBoxLayout.removeWidget(tabWidget)
+            self.hBoxLayout.insertWidget(index + 1, tabWidget)
+
+        elif eventPos.x() < prevPos and index > 0:
+            self.hBoxLayout.removeWidget(tabWidget)
+            self.hBoxLayout.insertWidget(index - 1, tabWidget)
+
 
 class Tab(QWidget):
     def __init__(self, parent, tabID, name = "Tab", color = "#23A0FF")  -> None:
@@ -151,8 +224,12 @@ class Tab(QWidget):
         """
         super().__init__(parent)
 
+        # References
+        self.tabContainer = parent
+
         # Set Attributes
         self.setObjectName("Tab")
+        self.installEventFilter(self)
 
         # Properties
         self.tabID = tabID
@@ -161,7 +238,7 @@ class Tab(QWidget):
         self.selected = False
 
         # Set size of tab
-        self.setFixedSize(QSize(tabWidth, tabHeight))
+        self.setMinimumSize(QSize(tabWidth, tabHeight))
 
         # Set tab color
         self.setAttribute(Qt.WA_StyledBackground, True)
@@ -176,9 +253,26 @@ class Tab(QWidget):
         font.setPointSize(10)
 
         # Label of Tab
-        self.label = QLabel(name, self)
-        self.label.setStyleSheet("color: white; padding-left: 30px; border-color: transparent; background-color: transparent; margin-top: 6px;")
+        self.label = TabText(name, self)
+        self.label.setStyleSheet("color: white; border-color: transparent; background-color: transparent; margin-top: 0px;")
         self.label.setFont(font)
+
+        # Delete Button
+        self.deleteButton = QPushButton()
+        self.deleteButton.setIcon(QPixmap("Resources\svg\Window Buttons\closeButton.svg"))
+        self.deleteButton.setFixedSize(20,20)
+        self.deleteButton.setStyleSheet("""
+        QPushButton{
+            margin-top: 0px; border-radius: 
+            5px; border:none; 
+        }
+        QPushButton:hover {
+            background-color: rgba(255, 255, 255, 35);;
+        }
+        """)
+        self.deleteButton.setIconSize(QSize(8,8))
+        self.deleteButton.hide()
+        self.deleteButton.clicked.connect(self.deleteButtonClicked)
 
         #Opacity
         self.op=QGraphicsOpacityEffect(self) # Opacity
@@ -188,13 +282,19 @@ class Tab(QWidget):
         #Layout
         hBoxLayout = QHBoxLayout(self)
         LayoutRemoveSpacing(hBoxLayout) # Remove layout spacing
+        hBoxLayout.setContentsMargins(30,0,5,0)
         hBoxLayout.addWidget(self.label)
+        hBoxLayout.addWidget(self.deleteButton)
+
+        # Initialization
+        self.SetSelected(False)
 
     def SetSelected(self, isSelected):
         """Set selected tab. If isSelected, this tab will be selected"""
 
         self.selected = isSelected
         self.SetStyleSheet()
+
 
     def SetStyleSheet(self):
         """Update the stylesheet, depending on if selected or not."""
@@ -203,10 +303,33 @@ class Tab(QWidget):
         else:
             self.op.setOpacity(.7)
 
+
+    # ----- Events -----
+    def deleteButtonClicked(self):
+        self.tabContainer.DeleteTab(self)
+        pass
+
     # Click on tab to select tab
     def mousePressEvent(self, event):
-        self.parent().SetSelected(self.parent().hBoxLayout.indexOf(self), self.tabID)
+        self.parent().SetSelectedWidget(self)
+        self.setFocus()
         return super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        self.label.mouseDoubleClickEvent(event)
+        # return super().mouseDoubleClickEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            self.tabContainer.moveTab(self, self.mapToParent(event.pos()))
+        return super().mouseMoveEvent(event)
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() == QEvent.Enter: # Show/hide delete button when tab is hovered over
+            self.deleteButton.show()
+        elif event.type() == QEvent.Leave:
+            self.deleteButton.hide()
+        return super().eventFilter(watched, event)
 
     # Paint colored dot 
     def paintEvent(self, event) -> None:
@@ -216,45 +339,99 @@ class Tab(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setPen(QPen(QColor(self.color),  1, Qt.SolidLine))
         p.setBrush(QBrush(QColor(self.color), Qt.SolidPattern))
-        p.drawEllipse(14, ((self.height() ) /2) - (dotSize/2) + 3, dotSize, dotSize)
+        p.drawEllipse(14, ((self.height() ) /2) - (dotSize/2) - 0, dotSize, dotSize)
 
         return super().paintEvent(event)
+
+class TabText(QLineEdit):
+    def __init__(self, text, parent)  -> None:
+        super().__init__(text, parent)
+        self.setEnabled(False)
+
+        self.returnPressed.connect(self.StopEdit)
+
+    def StopEdit(self):
+        self.setEnabled(False)
+
+
+    def focusOutEvent(self, arg__1) -> None:
+        self.StopEdit()
+        return super().focusOutEvent(arg__1)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if not self.isEnabled():
+            self.setEnabled(True)
+        return super().mouseDoubleClickEvent(event)
+
 
 class AddTabButton(QPushButton):
     def __init__(self, parent):
         """+ Button to add new tab
         """
         super().__init__(parent=parent)
-        self.setStyleSheet("background-color: transparent; border-width: 0px;")
+
+        # Properties
+        self.minOpacity = .3
+        self.maxOpacity = 1
+
+        # References
+        self.parentTopBar = parent    
+        self.tabContainer = parent.TabContainer    
+
+        self.setStyleSheet("""
+        QPushButton{
+            background-color: transparent; 
+            border-width: 0px;
+            border-radius: 12px;
+        }
+        """)
         self.setCursor(QCursor(Qt.PointingHandCursor))
-        self.setFixedHeight(topBarHeight)
-        self.setFixedWidth(topBarHeight)
+        self.setFixedHeight(25)
+        self.setFixedWidth(25)
+        self.setIconSize(QSize(13,13))
 
-        self.label = QLabel(self)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("border-width: 0px;")
-        self.label.setPixmap(QPixmap("Resources\svg\AddTab.svg"))
-
+        self.setIcon(QPixmap("Resources\svg\AddTab.svg"))
         self.installEventFilter(self)
 
         #Opacity
         self.op=QGraphicsOpacityEffect(self) # Opacity
         self.setGraphicsEffect(self.op)
-        self.op.setOpacity(.2)
+        self.op.setOpacity(self.minOpacity)
 
-        #Layout 
-        self.hBoxLayout = QHBoxLayout(self)
-        LayoutRemoveSpacing(self.hBoxLayout)
-        self.hBoxLayout.addWidget(self.label)
+    def mousePressEvent(self, e) -> None:
+        self.AddTab()
+        return super().mousePressEvent(e)
+
+    def AddTab(self):
+        newID = GenerateID()
+        
+        tabData = CreateTabItem(tabName="Tab", tabID = newID, canvasItems=[]) 
+        self.parentTopBar.tabsData[newID] = tabData
+        self.tabContainer.AddTab(newID, tabData["tabName"], setSelected = False)
 
     def eventFilter(self, object, event):
         if event.type() == QEvent.HoverEnter:
-            self.op.setOpacity(.5)
+            self.op.setOpacity(self.maxOpacity)
+            self.setStyleSheet("""
+            QPushButton{
+                background-color: transparent; 
+                border-width: 0px;
+                border-radius: 12px;
+                background-color: rgba(41,46,55,200); 
+            }
+            """)
             return True
         if event.type() == QEvent.HoverLeave:
-            self.op.setOpacity(.2)
+            self.op.setOpacity(self.minOpacity)
+            self.setStyleSheet("""
+            QPushButton{
+                background-color: transparent; 
+                border-width: 0px;
+                border-radius: 12px;
+                background-color: rgba(255,255,255,0); 
+            }
+            """)
             return True
-        
         return False
 
 

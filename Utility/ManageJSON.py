@@ -16,6 +16,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 
 from Utility.UtilityFunctions import GenerateID
+from Settings.settings import * 
 
 def LoadJSON(fileLocation):
     """Load the JSON data
@@ -85,3 +86,14 @@ def CreateCanvasItem(nodeID: str, itemPos: QPointF, itemScale:float):
         "itemScale": itemScale
     }
     return canvasItem
+
+def CreateTabItem(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500], viewportZoom = 1, tabColor = defaultAccentColor):
+    tab = {
+        "tabName": tabName,
+        "tabID": tabID,
+        "viewportPos": viewportPos,
+        "viewportZoom": viewportZoom,
+        "tabColor": tabColor,
+        "canvasItems": canvasItems
+    }
+    return tab

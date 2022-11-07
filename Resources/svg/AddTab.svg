@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15">
   <g id="AddTab" transform="translate(-746 -13.5)">
-    <line id="Line_37" data-name="Line 37" y2="13" transform="translate(753.5 14.5)" fill="none" stroke="#cbd9fe" stroke-linecap="round" stroke-width="2"/>
-    <line id="Line_38" data-name="Line 38" y2="13" transform="translate(760 21) rotate(90)" fill="none" stroke="#cbd9fe" stroke-linecap="round" stroke-width="2"/>
+    <line id="Line_37" data-name="Line 37" y2="13" transform="translate(753.5 14.5)" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="2"/>
+    <line id="Line_38" data-name="Line 38" y2="13" transform="translate(760 21) rotate(90)" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="2"/>
   </g>
 </svg>

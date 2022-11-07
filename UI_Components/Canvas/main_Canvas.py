@@ -405,10 +405,6 @@ class MainCanvas(QGraphicsView):
             self.mainScene.keyPressEvent(event)
             return True
         
-    #     if event.key() == Qt.Key.Key_Delete:                    # If Delete key is pressed, delete selected items
-    #         for item in self.selectedItemGroup.childItems():
-    #             self.RemoveCanvasItem(item)
-
         return super().keyPressEvent(event)
 
     # ________________________________________
