@@ -67,8 +67,8 @@ def LoadNodes(JSONObj):
 def CreateImageNode(imagePath, nodeName = "Image_Node"):
     if path.exists(imagePath):
         node = {
-            "nodeType": nodeName,
-            "nodeName": "Image",
+            "nodeType": "Image_Node",
+            "nodeName": nodeName,
             "nodeID": GenerateID(),
             "creationTime": time(),
             "imagePath": imagePath
@@ -78,6 +78,16 @@ def CreateImageNode(imagePath, nodeName = "Image_Node"):
     else:
         print("CreateImageNode: Invalid Path")
         raise Exception("CreateImageNode: Invalid Path")
+
+def CreateTextNode(text, nodeName = "Text_Node"):
+    node = {
+        "nodeType": "Text_Node",
+        "nodeName": nodeName,
+        "nodeID": GenerateID(),
+        "creationTime": time(),
+        "nodeText": text
+    }
+    return node
 
 def CreateCanvasItem(nodeID: str, itemPos: QPointF, itemScale:float):
     canvasItem = {

@@ -183,6 +183,31 @@ class MainCanvas(QGraphicsView):
             self.IsCanvasEmpty.emit(True)
         else:
             self.IsCanvasEmpty.emit(False)    
+   
+   
+    def InsertTextNode(self, text:str, itemPos: QPointF, itemScale = 1):
+        newID = GenerateID()
+
+        nodeData = CreateTextNode(text)
+        self.SetNodeData(newID, nodeData)
+
+        canvasItemData = CreateCanvasItem(newID, itemPos, itemScale)
+
+        self.AddNodeToDatabase(nodeData)
+        self.AddCanvasItem(canvasItemData)
+        self.NewCanvasItemData(canvasItemData, nodeData)
+
+    def InsertImageNode(self, imagePath: str, itemPos: QPointF, itemScale:int = 1):
+        newID = GenerateID()
+
+        nodeData = CreateImageNode(imagePath)
+        self.SetNodeData(newID, nodeData)
+
+        canvasItemData = CreateCanvasItem(newID, itemPos, itemScale)
+
+        self.AddNodeToDatabase(nodeData)
+        self.AddCanvasItem(canvasItemData)
+        self.NewCanvasItemData(canvasItemData, nodeData)
     # ________________________________________
 
 

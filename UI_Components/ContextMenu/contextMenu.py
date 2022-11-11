@@ -77,7 +77,7 @@ def CanvasItemContextMenu(self, event):
             self.RemoveCanvasItem(item)
 
     elif action == insertText:
-        
+        self.InsertTextNode("Text", clickPos, 1)
         print("Insert Text")
 
     elif action == saveProject:
