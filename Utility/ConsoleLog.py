@@ -11,7 +11,7 @@ def log(name: str, description = ""):
         description (str, optional): description of log. Defaults to "".
     """
     log = getDateTime() + ": " + name + " - " + description
-    # print(log)
+    print(log)
 
     # Write to log file
     logFile = open(softwareLogLocation, 'a')

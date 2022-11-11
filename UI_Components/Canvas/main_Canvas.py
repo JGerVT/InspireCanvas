@@ -1,5 +1,5 @@
 """
-Description: This python file contains the QGraphicsView and QGraphicsScene that display the canvas items. 
+Description:    This python file contains the QGraphicsView and QGraphicsScene that display the canvas items. 
 
 Date Created: 9/27/22 
 Date Updated: 10/15/22
@@ -74,9 +74,6 @@ class MainCanvas(QGraphicsView):
         # _____ Signals _____
         self.IsCanvasEmpty.connect(self.MainContent.setCanvasEmpty)
 
-
-
-    # _________ ADD/REMOVE CanvasItems _________
     def TabSelected(self, tabData):
         """Set canvas items on the canvas to a list of canvasItems.
         This removes all pre-existing canvas items on the canvas.
@@ -98,28 +95,22 @@ class MainCanvas(QGraphicsView):
         self.RemoveAllSelected()
 
         for item in self.mainScene.items(): # Only remove CanvasItems
-            if issubclass(type(item), CanvasItem):      #! Remove
+            if issubclass(type(item), CanvasItem): 
                 self.mainScene.removeItem(item)
 
         self.canvasItems.clear()    # Remove all items on canvas
 
-        self.SetCanvasItemCount()
-
         for canvasItem in canvasItems:          # Add all canvas items from canvasItems to the canvas. 
-            self.AddCanvasItem(canvasItem)
+            self.InsertCanvasItem(canvasItem)
 
+        self.SetCanvasItemCount()   # This is needed if no CanvasItems are present, otherwise it will not show the message
         self.StoreZoomAmt()
 
-    def AddNodeToDatabase(self, nodeData: dict):
-        """Add Node Data to database
 
-        Args:
-            nodeData (dict): data that will be added to database
-        """
-        self.nodeHashTable[nodeData["nodeID"]] = nodeData
-
-    def AddCanvasItem(self, canvasItemData):
-        """Add CanvasItem to the canvas
+    # ----- ADD, REMOVE, and Copy CanvasItems -----
+    def InsertCanvasItem(self, canvasItemData):
+        """ Add CanvasItem to the canvas. This will check which type of CanvasItem is passed and create the correct CanvasItem
+            On Initialization, this is called from self.TabSelected
 
         Args:
             CanvasItemData (dict): Data for CanvasItem
@@ -127,21 +118,41 @@ class MainCanvas(QGraphicsView):
         Returns:
             (ImageCanvasItem): returns created CanvasItem
         """
-        nodeType = self.nodeHashTable[canvasItemData["nodeID"]]["nodeType"]
+        try:    # IF item is found, get it's data, else raise error
+            nodeData = self.nodeHashTable[canvasItemData["nodeID"]]
+        except:
+            ConsoleLog.error("Item [" + canvasItemData["nodeID"] +"] not found in database.")
+            return None
 
-        if nodeType == "Image_Node":
+        newCanvasItem = None
+        if nodeData["nodeType"] == "Image_Node":
             newCanvasItem = ImageCanvasItem(self, canvasItemData)
-        elif nodeType == "Text_Node":
+        elif nodeData["nodeType"] == "Text_Node":
             newCanvasItem = TextCanvasItem(self, canvasItemData)
+        else:   # If type is not valid, do not add to database.
+            return None
 
-        self.mainScene.addItem(newCanvasItem)
-        self.canvasItems.append(newCanvasItem)
+
+        return self.AddCanvasItemToScene(newCanvasItem)
+
+    def AddCanvasItemToScene(self, canvasItem):
+        """This function adds the passed CanvasItem to the scene. 
+
+        Args:
+            canvasItem (CanvasItem): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        self.mainScene.addItem(canvasItem)
+        self.canvasItems.append(canvasItem)
+
         self.SetCanvasItemCount()
-        
         self.SetZValues()
 
-        return newCanvasItem
-
+        return canvasItem
+    
     def RemoveCanvasItem(self, canvasItem: CanvasItem):
         """Remove CanvasItem from Canvas
 
@@ -158,8 +169,7 @@ class MainCanvas(QGraphicsView):
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
 
-    # def DuplicateCanvasItem(self, canvasItem: CanvasItem, newPos:QPointF = None):
-    def DuplicateCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
+    def CopyCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
         """This function will duplicate a given CanvasItem data at the desired location. 
 
         Args:
@@ -170,12 +180,68 @@ class MainCanvas(QGraphicsView):
         Returns:
             _type_: _description_
         """
-        newData = CreateCanvasItem(nodeID, newPos, scale)
+        newData = CreateCIData(nodeID, newPos, scale)
         self.canvasItemData.append(newData)
-        canvasItem = self.AddCanvasItem(newData)
+        canvasItem = self.InsertCanvasItem(newData)
         
         return canvasItem
 
+    # ________________________________________
+
+    # _______________ Utility _______________
+    # ----- Set ------
+    def SetAllData(self, canvasItemData, nodeData):
+        """Sets data for both the canvasItem and nodeData
+
+        Args:
+            canvasItemData (_type_): canvasItemData
+            nodeData (_type_): node Data
+        """
+        self.SetCanvasItemDatabase(canvasItemData)
+        self.SetNodeDatabase(nodeData)
+
+    def SetCanvasItemDatabase(self, canvasItemData):
+        """ Add CanvasItem Data to database
+            This will add the Image, Text, or File node data to the Node database.
+
+        Args:
+            nodeData (dict): data that will be added to database
+        """
+        self.canvasItemData.append(canvasItemData)
+
+    def SetNodeDatabase(self, nodeData):
+        """ Add Node Data to database
+            This will add the Image, Text, or File node data to the Node database.
+
+        Args:
+            nodeData (dict): data that will be added to database
+        """
+        self.nodeHashTable[nodeData["nodeID"]] = nodeData
+
+    def SetZValues(self):
+        """Sets the z-index for every CanvasItem in the self.canvasItems list
+        """
+        for node in self.canvasItems:
+            node.setZValue(self.canvasItems.index(node))
+    # ---------------
+
+    # ----- Get -----
+    def GetNodeData(self, nodeID:str):
+        """Gets the data from the nodeHashTable (database of nodes)"""
+        return self.nodeHashTable[nodeID]
+
+    def GetCanvasItemsFromList(self, list):
+        tempList = []
+        for item in list:
+            if issubclass(type(item), CanvasItem):
+                tempList.append(item)
+        return tempList
+
+    def GetZoomScale(self):
+        return self.transform().m11()
+    # ---------------
+
+    # ----- Other -----
     def SetCanvasItemCount(self):
         """Used to update if prompt to add CanvasItem appears or not in mainContent.py"""
 
@@ -184,52 +250,6 @@ class MainCanvas(QGraphicsView):
         else:
             self.IsCanvasEmpty.emit(False)    
    
-   
-    def InsertTextNode(self, text:str, itemPos: QPointF, itemScale = 1):
-        newID = GenerateID()
-
-        nodeData = CreateTextNode(text)
-        self.SetNodeData(newID, nodeData)
-
-        canvasItemData = CreateCanvasItem(newID, itemPos, itemScale)
-
-        self.AddNodeToDatabase(nodeData)
-        self.AddCanvasItem(canvasItemData)
-        self.NewCanvasItemData(canvasItemData, nodeData)
-
-    def InsertImageNode(self, imagePath: str, itemPos: QPointF, itemScale:int = 1):
-        newID = GenerateID()
-
-        nodeData = CreateImageNode(imagePath)
-        self.SetNodeData(newID, nodeData)
-
-        canvasItemData = CreateCanvasItem(newID, itemPos, itemScale)
-
-        self.AddNodeToDatabase(nodeData)
-        self.AddCanvasItem(canvasItemData)
-        self.NewCanvasItemData(canvasItemData, nodeData)
-    # ________________________________________
-
-
-    # _______________ Utility _______________
-    def NewCanvasItemData(self, canvasItemData, nodeData):
-        self.canvasItemData.append(canvasItemData)
-        self.nodeHashTable[nodeData["nodeID"]] = nodeData
-
-    def GetNodeData(self, nodeID:str):
-        """Gets the data from the nodeHashTable (database of nodes)"""
-        return self.nodeHashTable[nodeID]
-
-    def SetNodeData(self, nodeID: str, nodeData:dict):
-        """Sets the node data in nodeHashTable (database of nodes)
-        
-        Args:
-            nodeID: id of node being set
-            nodeData: data that is being set to the nodeID
-        """
-        self.nodeHashTable[nodeID] = nodeData
-
-
     def CanvasItemToFront(self, canvasItem):
         """Brings the CanvasItem to the front of the canvas
         Called when CanvasItem is selected 
@@ -240,12 +260,6 @@ class MainCanvas(QGraphicsView):
         self.canvasItems.append(self.canvasItems.pop(self.canvasItems.index(canvasItem)))
         self.canvasItemData.append(self.canvasItemData.pop(self.canvasItemData.index(canvasItem.canvasItemData))) # Move canvasItemData to front of list, so it persists across sessions
         self.SetZValues()
-
-    def SetZValues(self):
-        """Sets the z-index for every CanvasItem in the self.canvasItems list
-        """
-        for node in self.canvasItems:
-            node.setZValue(self.canvasItems.index(node))
 
     def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = False):
         """Check if an item is under the mouse on the canvas.
@@ -262,19 +276,11 @@ class MainCanvas(QGraphicsView):
                 itemAtPos = True
         return itemAtPos
 
-    def GetCanvasItemsFromList(self, list):
-        tempList = []
-        for item in list:
-            if issubclass(type(item), CanvasItem):
-                tempList.append(item)
-        return tempList
-
     def SetSelectionHighlightPos(self):
         self.selectionHighlight.SelectionChanged(self.selectedItemGroup.childItems())
+    # ---------------
 
-    def GetZoomScale(self):
-        return self.transform().m11()
-
+    # ----- Zoom -----
     def StoreZoomAmt(self):
         zoomAmt = self.GetZoomScale()
         self.tabData["viewportZoom"] = zoomAmt
@@ -321,7 +327,6 @@ class MainCanvas(QGraphicsView):
 
     # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
         """This function ensures that the canvas item stays within the bounds of the scene."""
-        # pass
 
     # _______________ Manage Selected Canvas Nodes _______________
     def SetSelected(self, canvasItem):
@@ -368,7 +373,6 @@ class MainCanvas(QGraphicsView):
 
         self.SetSelectionHighlightPos()
         
-
     def RemoveAllSelected(self):
         """Removes all selected canvasItems from selectedItemGroup"""
         for item in self.selectedItemGroup.childItems():
@@ -434,7 +438,6 @@ class MainCanvas(QGraphicsView):
 
         return super().mouseReleaseEvent(event)
 
-
     def wheelEvent(self, event):
         """CTRL + Mousewheel: Zoom in and out, limited by settings.py ( minMaxZoom[] ) 
         
@@ -445,14 +448,12 @@ class MainCanvas(QGraphicsView):
         else:
             self.AddSubtractZoom(.1)
 
-
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
             self.mainScene.keyPressEvent(event)
             return True
         
         return super().keyPressEvent(event)
-
     # ________________________________________
 
 
@@ -604,12 +605,11 @@ class MainScene (QGraphicsScene):
                     urlTemp = url.toLocalFile()
                     
                     if urlType in imageFileTypes: # Is an image file type.
-                        nodeData = CreateImageNode(url.toLocalFile())   # Do this first to ensure that the file exists.
-                        canvasItemData = CreateCanvasItem(nodeData["nodeID"], initPosition, 1)
+                        nodeData = CreateImageData(url.toLocalFile())   # Do this first to ensure that the file exists.
+                        canvasItemData = CreateCIData(nodeData["nodeID"], initPosition, 1)
 
-                        self.mainView.AddNodeToDatabase(nodeData)
-                        self.mainView.AddCanvasItem(canvasItemData)
-                        self.mainView.NewCanvasItemData(canvasItemData, nodeData)
+                        self.mainView.SetAllData(canvasItemData, nodeData)
+                        self.mainView.InsertCanvasItem(canvasItemData)
 
                         initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
 

@@ -12,7 +12,7 @@ import copy
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
-from Utility.ManageJSON import CreateTabItem
+from Utility.ManageJSON import CreateTabData
 
 # Custom Imports
 from Utility.UtilityFunctions import *
@@ -141,7 +141,7 @@ class TabContainer(QWidget):
         """
         newID = GenerateID()
         
-        tabData = CreateTabItem(tabName="Tab", tabID = newID, canvasItems=[]) 
+        tabData = CreateTabData(tabName="Tab", tabID = newID, canvasItems=[]) 
         self.mainTopBar.tabsData[newID] = tabData
         newTab = self.AddTab(newID, tabData["tabName"], setSelected = False)
 
@@ -155,7 +155,7 @@ class TabContainer(QWidget):
         tabColor = tabWidget.color
         canvasItems = copy.deepcopy(self.mainTopBar.tabsData[tabWidget.tabID]["canvasItems"])
 
-        tabData = CreateTabItem(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems) 
+        tabData = CreateTabData(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems) 
         self.mainTopBar.tabsData[newID] = tabData
         newTab = self.AddTab(newID, tabName, setSelected = False)
 

@@ -64,7 +64,62 @@ def LoadNodes(JSONObj):
     return nodeDict
 
 
-def CreateImageNode(imagePath, nodeName = "Image_Node"):
+def CreateCIData(nodeID: str, itemPos: QPointF, itemScale:float):
+    """Creates data for a new CI (CanvasItem)
+
+    Args:
+        nodeID (str): ID of the new CanvasItem
+        itemPos (QPointF): position for the new Canvas Item to be set
+        itemScale (float): scale for the new canvasItem
+
+    Returns:
+        Dict: returns a dictionary of nodeID, itemPos, and itemScale 
+    """
+    canvasItem = {
+        "nodeID": nodeID,
+        "itemPos": [itemPos.x(), itemPos.y()],
+        "itemScale": itemScale
+    }
+    return canvasItem
+
+def CreateTabData(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500], viewportZoom = 1, tabColor = defaultAccentColor):
+    """Creates data for a new Tab
+
+    Args:
+        tabName (str): name of the new tab
+        tabID (str): ID of the new tab
+        canvasItems (_type_): List of CanvasItems included in tab 
+        viewportPos (list, optional): Starting viewport pos. Defaults to [2500,2500].
+        viewportZoom (int, optional): Initial zoom. Defaults to 1.
+        tabColor (_type_, optional): Initial accent color_. Defaults to defaultAccentColor.
+
+    Returns:
+        dict: returns a dictionary of tabName, tabID, viewportPos,  viewportZoom, tabColor, and canvasItems
+    """
+    tab = {
+        "tabName": tabName,
+        "tabID": tabID,
+        "viewportPos": viewportPos,
+        "viewportZoom": viewportZoom,
+        "tabColor": tabColor,
+        "canvasItems": canvasItems
+    }
+    return tab
+
+
+def CreateImageData(imagePath, nodeName = "Image_Node"):
+    """Create data for a new image
+
+    Args:
+        imagePath (_type_): path to the image
+        nodeName (str, optional): name of the node. Defaults to "Image_Node".
+
+    Raises:
+        Exception: If the path does not exist, it will not create the data.
+
+    Returns:
+        dict: returns a dictionary of nodeType, nodeName, nodeID,  creationTime, and imagePath
+    """
     if path.exists(imagePath):
         node = {
             "nodeType": "Image_Node",
@@ -79,7 +134,16 @@ def CreateImageNode(imagePath, nodeName = "Image_Node"):
         print("CreateImageNode: Invalid Path")
         raise Exception("CreateImageNode: Invalid Path")
 
-def CreateTextNode(text, nodeName = "Text_Node"):
+def CreateTextData(text, nodeName = "Text_Node"):
+    """Create data for a new Text Item
+
+    Args:
+        text (str): text that will be displayed
+        nodeName (str, optional): name of the node. Defaults to "Text_Node".
+
+    Returns:
+        dict: returns a dictionary of nodeType, nodeName, nodeID,  creationTime, and nodeText
+    """
     node = {
         "nodeType": "Text_Node",
         "nodeName": nodeName,
@@ -88,22 +152,3 @@ def CreateTextNode(text, nodeName = "Text_Node"):
         "nodeText": text
     }
     return node
-
-def CreateCanvasItem(nodeID: str, itemPos: QPointF, itemScale:float):
-    canvasItem = {
-        "nodeID": nodeID,
-        "itemPos": [itemPos.x(), itemPos.y()],
-        "itemScale": itemScale
-    }
-    return canvasItem
-
-def CreateTabItem(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500], viewportZoom = 1, tabColor = defaultAccentColor):
-    tab = {
-        "tabName": tabName,
-        "tabID": tabID,
-        "viewportPos": viewportPos,
-        "viewportZoom": viewportZoom,
-        "tabColor": tabColor,
-        "canvasItems": canvasItems
-    }
-    return tab

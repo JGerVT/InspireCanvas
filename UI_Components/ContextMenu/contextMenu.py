@@ -11,7 +11,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 
 from Utility.UtilityFunctions import *
-import copy
+from Utility.ManageJSON import *
 
 # Temporary Copy variables. When Tabs or CanvasItems are copied, they are set here. 
 copyTab = None
@@ -56,7 +56,7 @@ def CanvasItemContextMenu(self, event):
     if action == copyItem:
         copyCanvasItemData = []
         for item in selected.childItems(): 
-            offsetPos = item.pos() - selected.boundingRect().topLeft()
+            offsetPos = item.scenePos() - selected.sceneBoundingRect().topLeft()
 
             nodeID = item.nodeID
             scale = item.GetScale()
@@ -69,7 +69,7 @@ def CanvasItemContextMenu(self, event):
         for item in copyCanvasItemData:
             newLocation = clickPos + item["offsetPos"]
 
-            item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
+            item = self.CopyCanvasItem(item["nodeID"], newLocation, item["scale"])
             item.AddSelected(True)
 
     elif action == deleteItem:
@@ -77,8 +77,14 @@ def CanvasItemContextMenu(self, event):
             self.RemoveCanvasItem(item)
 
     elif action == insertText:
-        self.InsertTextNode("Text", clickPos, 1)
-        print("Insert Text")
+        # Generate Text data
+        textData = CreateTextData("Text")
+        newID = textData["nodeID"]
+        canvasItemData = CreateCIData(newID, clickPos, 1)
+
+        self.SetAllData(canvasItemData, textData)   # Set data to databases
+
+        self.InsertCanvasItem(canvasItemData)   # Insert text node
 
     elif action == saveProject:
         print("SAVE")
