@@ -8,8 +8,6 @@ Date Updated: 10/15/22
 # --Imports--
 import traceback
 
-from sympy import false
-
 from Settings.settings import *
 
 #Components Used:
@@ -18,6 +16,7 @@ from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
 from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
+from UI_Components.ContextMenu.contextMenu import *
 
 
 class MainCanvas(QGraphicsView):
@@ -143,7 +142,6 @@ class MainCanvas(QGraphicsView):
 
         return newCanvasItem
 
-
     def RemoveCanvasItem(self, canvasItem: CanvasItem):
         """Remove CanvasItem from Canvas
 
@@ -160,6 +158,23 @@ class MainCanvas(QGraphicsView):
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
 
+    # def DuplicateCanvasItem(self, canvasItem: CanvasItem, newPos:QPointF = None):
+    def DuplicateCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
+        """This function will duplicate a given CanvasItem data at the desired location. 
+
+        Args:
+            nodeID (int): _description_
+            newPos (QPointF, optional): _description_. Defaults to None.
+            scale (int, optional): New location of the canvas Item. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        newData = CreateCanvasItem(nodeID, newPos, scale)
+        self.canvasItemData.append(newData)
+        canvasItem = self.AddCanvasItem(newData)
+        
+        return canvasItem
 
     def SetCanvasItemCount(self):
         """Used to update if prompt to add CanvasItem appears or not in mainContent.py"""
@@ -207,7 +222,7 @@ class MainCanvas(QGraphicsView):
         for node in self.canvasItems:
             node.setZValue(self.canvasItems.index(node))
 
-    def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = false):
+    def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = False):
         """Check if an item is under the mouse on the canvas.
         
         Arg:
@@ -336,6 +351,11 @@ class MainCanvas(QGraphicsView):
 
         self.selectedItemGroup.resetTransform()
 
+    def GetSelected(self):
+        """Get all selected nodes"""
+        return self.selectedItemGroup.childItems()
+
+
     #_________ Events _________
     def mousePressEvent(self, event):   
         if event.button() == Qt.MouseButton.MiddleButton:
@@ -343,6 +363,7 @@ class MainCanvas(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
         elif event.button() == Qt.MouseButton.RightButton:
+            CanvasItemContextMenu(self, event)
             return
 
         elif event.button() == Qt.MouseButton.LeftButton:

@@ -6,6 +6,8 @@ Date Updated: 9/28/22
 """
 
 # --Imports--
+import copy
+
 #PySide
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -15,7 +17,7 @@ from Utility.ManageJSON import CreateTabItem
 # Custom Imports
 from Utility.UtilityFunctions import *
 from Settings.settings import *
-
+from UI_Components.ContextMenu.contextMenu import *
 
 class MainTopBar(QWidget):
     def __init__(self, parent, selectedTab : int, tabsData, projectName = "Project") -> None:
@@ -60,6 +62,14 @@ class MainTopBar(QWidget):
         # Init
 
 
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.RightButton:
+            TabBarContextMenu(self, event)
+            return
+
+        return super().mousePressEvent(event)
+
 class HamburgerButton(QPushButton):
     def __init__(self, parent):
         """
@@ -99,6 +109,7 @@ class TabContainer(QWidget):
         self.setObjectName("TabsContainer")
 
         # Properties and Data
+        self.mainTopBar = parent
         self.selectedTabIndex = selectedTab
         self.selectedTabWidget = None             
         self.tabsData = tabsData
@@ -121,6 +132,36 @@ class TabContainer(QWidget):
     def AddTabsData(self, tabsData):
         for key in tabsData:
             self.AddTab(tabsData[key]["tabID"], tabsData[key]["tabName"], tabsData[key]["tabColor"], setSelected = False)
+
+    def createNewTab(self, index = None):
+        """Insert a new tab into the tab container
+
+        Args:
+            index (int): If the user wants a specific insert location, pass an index. Defaults to None.
+        """
+        newID = GenerateID()
+        
+        tabData = CreateTabItem(tabName="Tab", tabID = newID, canvasItems=[]) 
+        self.mainTopBar.tabsData[newID] = tabData
+        newTab = self.AddTab(newID, tabData["tabName"], setSelected = False)
+
+        if index != None:
+            self.hBoxLayout.removeWidget(newTab)
+            self.hBoxLayout.insertWidget(index + 1, newTab)
+
+    def duplicateTab(self, tabWidget, index = None):
+        newID = GenerateID()
+        tabName = tabWidget.name
+        tabColor = tabWidget.color
+        canvasItems = copy.deepcopy(self.mainTopBar.tabsData[tabWidget.tabID]["canvasItems"])
+
+        tabData = CreateTabItem(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems) 
+        self.mainTopBar.tabsData[newID] = tabData
+        newTab = self.AddTab(newID, tabName, setSelected = False)
+
+        if index != None:
+            self.hBoxLayout.removeWidget(newTab)
+            self.hBoxLayout.insertWidget(index + 1, newTab)
 
     def AddTab(self, tabID, name = "", color = "#23A0FF", setSelected = True):
         tab = Tab(self, tabID, name, color)
@@ -188,6 +229,9 @@ class TabContainer(QWidget):
     def GetSelectedIndex(self):
         return self.hBoxLayout.indexOf(self.selectedTabWidget)
 
+    def getIndex(self, widget):
+        return self.hBoxLayout.indexOf(widget)
+
     def GetNumberOfTabs(self):
         return self.hBoxLayout.count()
 
@@ -212,7 +256,6 @@ class TabContainer(QWidget):
         elif eventPos.x() < prevPos and index > 0:
             self.hBoxLayout.removeWidget(tabWidget)
             self.hBoxLayout.insertWidget(index - 1, tabWidget)
-
 
 class Tab(QWidget):
     def __init__(self, parent, tabID, name = "Tab", color = "#23A0FF")  -> None:
@@ -289,6 +332,9 @@ class Tab(QWidget):
         # Initialization
         self.SetSelected(False)
 
+    def getIndex(self):
+        return self.tabContainer.getIndex(self)
+
     def SetSelected(self, isSelected):
         """Set selected tab. If isSelected, this tab will be selected"""
 
@@ -311,12 +357,19 @@ class Tab(QWidget):
 
     # Click on tab to select tab
     def mousePressEvent(self, event):
-        self.parent().SetSelectedWidget(self)
-        self.setFocus()
+        
+        if event.button() == Qt.MouseButton.RightButton:
+            TabBarContextMenu(self, event)
+            return
+        elif event.button() == Qt.MouseButton.LeftButton:
+            self.parent().SetSelectedWidget(self)
+            self.setFocus()
         return super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event) -> None:
-        self.label.mouseDoubleClickEvent(event)
+
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.label.mouseDoubleClickEvent(event)
         # return super().mouseDoubleClickEvent(event)
 
     def mouseMoveEvent(self, event) -> None:
@@ -403,11 +456,7 @@ class AddTabButton(QPushButton):
         return super().mousePressEvent(e)
 
     def AddTab(self):
-        newID = GenerateID()
-        
-        tabData = CreateTabItem(tabName="Tab", tabID = newID, canvasItems=[]) 
-        self.parentTopBar.tabsData[newID] = tabData
-        self.tabContainer.AddTab(newID, tabData["tabName"], setSelected = False)
+        self.tabContainer.createNewTab()
 
     def eventFilter(self, object, event):
         if event.type() == QEvent.HoverEnter:

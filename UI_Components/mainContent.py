@@ -20,6 +20,7 @@ from Utility.ManageJSON import *
 #Components Used:
 from UI_Components.TopBar.main_topBar import *
 from UI_Components.Canvas.main_Canvas import *
+from UI_Components.ContextMenu.contextMenu import * # Needed for initialization
 
 class MainContent(QWidget):
     FinishedInitializing = Signal() # When software finishes initialization, emit this signal
@@ -125,7 +126,6 @@ class ZoomButtons(QWidget):
         self.zoomInButton.setText("+")
         self.zoomInButton.setFont(font)
         self.zoomInButton.setCursor(Qt.PointingHandCursor)
-
 
         # Text
         self.zoomAMT = ClickableLineEdit(self)
