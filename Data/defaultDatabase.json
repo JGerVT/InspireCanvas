@@ -12,16 +12,19 @@
                 "tabColor": "#23A0FF",
                 "canvasItems":[
                     {
+                        "canvasItemID": "dffa3e38-0991-4dc5-8bca-1258a4c2a712",
                         "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
                         "itemPos": [2200,2090],
                         "itemScale": 1
                     },
                     {
+                        "canvasItemID": "3f921feb-9130-451a-b905-e65894636b91",
                         "nodeID": "eb5446af-ab22-4e0e-8220-0147ac468b6c",
                         "itemPos": [2600,2350],
                         "itemScale": 1.2
                     },
                     {
+                        "canvasItemID": "90c9afe9-d43f-43ab-bf7c-744b80ab8f54",
                         "nodeID": "ab5426af-ab12-2e0e-8220-0147ac468b6c",
                         "itemPos": [2100,2550],
                         "itemScale": 1
@@ -36,6 +39,7 @@
                 "tabColor": "#23A0FF",
                 "canvasItems":[
                     {
+                        "canvasItemID": "36813a48-78b1-4cc4-bdc4-d336ef4b2d92",
                         "nodeID": "eb5496af-ab22-4e0e-8220-0147ac468b6c",
                         "itemPos": [2600,2350],
                         "itemScale": 0.5

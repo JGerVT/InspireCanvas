@@ -13,17 +13,12 @@ from PySide6.QtCore import *
 from Utility.UtilityFunctions import *
 from Utility.ManageJSON import *
 
-# Temporary Copy variables. When Tabs or CanvasItems are copied, they are set here. 
-copyTab = None
-copyCanvasItemData = None
-
 def CanvasItemContextMenu(self, event):
     """ Context Menu when the canvas is right clicked
     Args: 
         event: MouseClick event
     
     """
-    global copyTab, copyCanvasItemData # Needed to avoid "UnboundLocalError: local variable referenced before assignment" error
 
     selected = self.selectedItemGroup
     clickPos = self.mapToScene(event.pos())
@@ -38,64 +33,66 @@ def CanvasItemContextMenu(self, event):
     if len(selected.childItems()) == 0:
         copyItem.setDisabled(True)
         deleteItem.setDisabled(True)
-    if copyCanvasItemData == None:
+    if self.copyCanvasItemData == None:
         pasteItem.setDisabled(True)
 
-    contextMenu.addSeparator()
-    insertMenu = contextMenu.addMenu("Insert")          # Insert Menu
-    insertImage = insertMenu.addAction("Insert Image")  # Insert Image CanvasItem
-    insertFile = insertMenu.addAction("Insert File")    # Insert File CanvasItem
-    insertText = insertMenu.addAction("Insert Text")    # Insert Text CanvasItem
-    contextMenu.addSeparator()
-    saveProject = contextMenu.addAction("Save Project") # Save Project
-    loadProject = contextMenu.addAction("Load Project") # Load Project
-    newProject = contextMenu.addAction("New Project")   # New Project
+    contextMenu.addSeparator()                          # Insert Canvas Items
+    insertMenu = contextMenu.addMenu("Insert")              # Insert Menu
+    insertImage = insertMenu.addAction("Insert Image")      # Insert Image CanvasItem
+    insertText = insertMenu.addAction("Insert Text")        # Insert Text CanvasItem
+    insertFile = insertMenu.addAction("Insert File")        # Insert File CanvasItem
+    contextMenu.addSeparator()                          # Project Management
+    saveProject = contextMenu.addAction("Save Project")     # Save Project
+    loadProject = contextMenu.addAction("Load Project")     # Load Project
+    newProject = contextMenu.addAction("New Project")       # New Project
 
     action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
     if action == copyItem:
-        copyCanvasItemData = []
-        for item in selected.childItems(): 
-            offsetPos = item.scenePos() - selected.sceneBoundingRect().topLeft()
+        self.CopySelection()
 
-            nodeID = item.nodeID
-            scale = item.GetScale()
-            copyCanvasItemData.append({ "offsetPos":offsetPos,
-                                        "nodeID": nodeID,
-                                        "scale": scale})
-        
-    elif action == pasteItem and copyCanvasItemData != None:
-        self.RemoveAllSelected()
-        for item in copyCanvasItemData:
-            newLocation = clickPos + item["offsetPos"]
-
-            item = self.CopyCanvasItem(item["nodeID"], newLocation, item["scale"])
-            item.AddSelected(True)
+    elif action == pasteItem and self.copyCanvasItemData != None:
+        self.PasteSelection(clickPos)
 
     elif action == deleteItem:
         for item in selected.childItems():
             self.RemoveCanvasItem(item)
 
+    # ----- Insert Canvas Items -----
+    elif action == insertImage:         # Insert Images
+        imageFiles = QFileDialog.getOpenFileNames(self,"Select Images",".","Images (*.jpg *.png *.gif)")
+
+        i = 0
+        for filePath in imageFiles[0]:
+            imageNodeData = CreateImageData(filePath)
+            canvasItemData = CreateCIData(imageNodeData["nodeID"], clickPos + QPointF(10*i, 10*i),1)
+
+            self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
+            self.InsertCanvasItem(canvasItemData)   # Insert text node
+            i += 1
+
     elif action == insertText:
         # Generate Text data
-        textData = CreateTextData("Text")
-        newID = textData["nodeID"]
+        textNodeData = CreateTextData("Text")
+        newID = textNodeData["nodeID"]
         canvasItemData = CreateCIData(newID, clickPos, 1)
 
-        self.SetAllData(canvasItemData, textData)   # Set data to databases
+        self.SetAllData(canvasItemData, textNodeData)   # Set data to databases
 
         self.InsertCanvasItem(canvasItemData)   # Insert text node
 
     elif action == saveProject:
         print("SAVE")
 
+
+
+# ----- Tab Bar Context Menu -----
 def TabBarContextMenu(self, event):
     """ Context Menu when the tab bar is right clicked
 
     Args: 
         event: MouseClick event
     """
-    global copyTab, copyNodes # Needed to avoid "UnboundLocalError: local variable referenced before assignment" error
 
     contextMenu = QMenu()
     contextMenu.setStyleSheet(qMenuStyle)
@@ -111,7 +108,7 @@ def TabBarContextMenu(self, event):
         closeItem.setDisabled(True)
         duplicateItem.setDisabled(True)
     
-    if copyTab == None:
+    if self.GetCopy() == None:
         pasteItem.setDisabled(True)
 
     contextMenu.addSeparator()
@@ -126,12 +123,12 @@ def TabBarContextMenu(self, event):
     action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
     if action == copyItem and type(self).__name__ == "Tab": # If copy tab, set self to copyTab
-        copyTab = self
-    elif action == pasteItem and copyTab != None:           # If paste item, duplicate copyTab
+        self.SetCopy(self)
+    elif action == pasteItem and self.GetCopy() != None:    # If paste item, duplicate copyTab
         if type(self).__name__ == "Tab":
-            self.tabContainer.duplicateTab(copyTab ,self.getIndex())
+            self.tabContainer.duplicateTab(self.GetCopy() ,self.getIndex())
         elif type(self).__name__ == "MainTopBar":
-            self.TabContainer.duplicateTab(copyTab)
+            self.TabContainer.duplicateTab(self.GetCopy())
     elif action == closeItem:                               # If closeItem, delete selected tab
         self.tabContainer.DeleteTab(self)
     elif action == duplicateItem:                           # If duplicate Tab, Duplicate Tab

@@ -36,6 +36,9 @@ class MainTopBar(QWidget):
         self.tabsData = tabsData
         self.projectName = projectName
 
+        self.copyTab = None
+
+
         # Set Attributes
         self.setObjectName = "MainTopBar"
         self.setFixedHeight(topBarHeight)   # set in Settings/settings.py
@@ -61,7 +64,11 @@ class MainTopBar(QWidget):
 
         # Init
 
+    def GetCopy(self):
+        return self.copyTab
 
+    def SetCopy(self, copy):
+        self.copyTab = copy
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.RightButton:
@@ -123,6 +130,12 @@ class TabContainer(QWidget):
 
         # Add Tabs
         self.AddTabsData(self.tabsData)
+
+    def GetCopy(self):
+        return self.mainTopBar.GetCopy()
+
+    def SetCopy(self, copy):
+        self.mainTopBar.SetCopy(copy)
 
     def FinishedInitializing(self): 
         """When the main content is all initialized. This function emits a signal when a new tab is selected and calls self.SetSelected to update the canvas"""
@@ -331,6 +344,12 @@ class Tab(QWidget):
 
         # Initialization
         self.SetSelected(False)
+
+    def GetCopy(self):
+        return self.tabContainer.GetCopy()
+
+    def SetCopy(self, copy):
+        self.tabContainer.SetCopy(copy)
 
     def getIndex(self):
         return self.tabContainer.getIndex(self)

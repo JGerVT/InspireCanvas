@@ -55,6 +55,9 @@ class MainCanvas(QGraphicsView):
         self.canvasItems = []
         self.canvasItemData = [] #Copy of canvas item data. Used for persistent data
 
+        # Temporary Copy variable. When CanvasItems are copied, they are set here. 
+        self.copyCanvasItemData = None
+
         # _____ Rubber Band Selection _____
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
@@ -106,7 +109,6 @@ class MainCanvas(QGraphicsView):
         self.SetCanvasItemCount()   # This is needed if no CanvasItems are present, otherwise it will not show the message
         self.StoreZoomAmt()
 
-
     # ----- ADD, REMOVE, and Copy CanvasItems -----
     def InsertCanvasItem(self, canvasItemData):
         """ Add CanvasItem to the canvas. This will check which type of CanvasItem is passed and create the correct CanvasItem
@@ -153,7 +155,7 @@ class MainCanvas(QGraphicsView):
 
         return canvasItem
     
-    def RemoveCanvasItem(self, canvasItem: CanvasItem):
+    def RemoveCanvasItem(self, canvasItem: CanvasItem, removeNodeData = True):
         """Remove CanvasItem from Canvas
 
         Args:
@@ -164,7 +166,8 @@ class MainCanvas(QGraphicsView):
         self.RemoveSelected(canvasItem)
 
         self.tabData["canvasItems"].pop(self.tabData["canvasItems"].index(canvasItem.canvasItemData))   # Remove data from canvasItem Database
-        del self.nodeHashTable[canvasItem.nodeID]
+        if removeNodeData:
+            del self.nodeHashTable[canvasItem.nodeID]
 
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
@@ -186,6 +189,28 @@ class MainCanvas(QGraphicsView):
         
         return canvasItem
 
+    # ________________________________________
+    
+    # ----- Copy and Paste -----
+    def CopySelection(self):
+        self.copyCanvasItemData = []
+        for item in self.selectedItemGroup.childItems(): 
+            offsetPos = item.scenePos() - self.selectedItemGroup.sceneBoundingRect().topLeft()
+
+            nodeID = item.nodeID
+            scale = item.GetScale()
+            self.copyCanvasItemData.append({"offsetPos":offsetPos,
+                                            "containerScenePos": self.selectedItemGroup.sceneBoundingRect().topLeft(),
+                                            "nodeID": nodeID,
+                                            "scale": scale})
+
+    def PasteSelection(self, clickPos:QPointF):
+        self.RemoveAllSelected()
+        for item in self.copyCanvasItemData:
+            newLocation = clickPos + item["offsetPos"]
+
+            item = self.CopyCanvasItem(item["nodeID"], newLocation, item["scale"])
+            item.AddSelected(True)
     # ________________________________________
 
     # _______________ Utility _______________
@@ -278,6 +303,15 @@ class MainCanvas(QGraphicsView):
 
     def SetSelectionHighlightPos(self):
         self.selectionHighlight.SelectionChanged(self.selectedItemGroup.childItems())
+    
+    def GetVisibleScreenRect(self):
+        """ Returns a QRectF of the visible area in the scene
+            From: https://stackoverflow.com/a/17924010
+        """
+        viewport_rect = QRect(0, 0, self.viewport().width(), self.viewport().height())
+        visible_scene_rect = QRectF(self.mapToScene(viewport_rect).boundingRect())
+
+        return visible_scene_rect
     # ---------------
 
     # ----- Zoom -----
@@ -449,10 +483,24 @@ class MainCanvas(QGraphicsView):
             self.AddSubtractZoom(.1)
 
     def keyPressEvent(self, event) -> None:
+        print(GenerateID())
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
             self.mainScene.keyPressEvent(event)
-            return True
-        
+            return True        
+
+        if event.matches(QKeySequence.Copy):                                            # Copy selected CanvasItems
+            self.CopySelection()       
+        elif event.matches(QKeySequence.Paste) and self.copyCanvasItemData != None:     # Paste selected CanvasItems
+            cursorScenePos = self.mapToScene(self.mapFromGlobal(QCursor().pos()))
+            if self.GetVisibleScreenRect().contains(cursorScenePos):
+                self.PasteSelection(cursorScenePos)
+            else:
+                self.PasteSelection(self.copyCanvasItemData[0]["containerScenePos"])
+        elif event.matches(QKeySequence.Cut):                                           # Cut selected CanvasItems
+            self.CopySelection()
+            for item in self.GetSelected():
+                self.RemoveCanvasItem(item, False)
+
         return super().keyPressEvent(event)
     # ________________________________________
 
@@ -572,7 +620,11 @@ class MainScene (QGraphicsScene):
         # return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event) -> None:
-        textItem = self.onlyOneCanvasItemSelected()
+        try:
+            textItem = self.onlyOneCanvasItemSelected()
+        except:
+            pass
+
         if event.key() == Qt.Key.Key_Delete:                    # If Delete key is pressed, delete selected items
             if type(textItem) != TextCanvasItem or type(textItem) == TextCanvasItem and not textItem.isEditable():# If there is no text item or the text item is not editable, delete. 
                 for item in self.mainView.selectedItemGroup.childItems():
