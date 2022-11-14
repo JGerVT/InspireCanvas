@@ -140,7 +140,7 @@ class TabContainer(QWidget):
     def FinishedInitializing(self): 
         """When the main content is all initialized. This function emits a signal when a new tab is selected and calls self.SetSelected to update the canvas"""
         self.SelectTab.connect(self.MainContent.TabSelected)
-        self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))
+        self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))  # Set selected tab on initialization
 
     def AddTabsData(self, tabsData):
         for key in tabsData:

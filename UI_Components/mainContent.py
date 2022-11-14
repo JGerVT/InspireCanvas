@@ -37,6 +37,7 @@ class MainContent(QWidget):
         self.JSONData = LoadJSON(DefaultJSONProjectLocation)
         self.tabHashTable = LoadTabs(self.JSONData)
         self.nodeHashTable = LoadNodes(self.JSONData)
+        self.currentSelectedTab = None
 
         # Elements
         self.topBar = MainTopBar(self, tabsData = self.tabHashTable, projectName = GetProjectName(self.JSONData), selectedTab = GetSelectedTab(self.JSONData))  # Top Bar 
@@ -58,7 +59,9 @@ class MainContent(QWidget):
         Arg:
             tabID (str) : The tabID to set to selected.
         """
-        self.canvas.TabSelected(self.tabHashTable[tabID])
+        if tabID != self.currentSelectedTab:    # If new tab is selected, select the tab
+            self.canvas.TabSelected(self.tabHashTable[tabID])
+            self.currentSelectedTab = tabID
 
 
     def setCanvasEmpty(self, isCanvasEmpty: bool):

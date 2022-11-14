@@ -63,7 +63,6 @@ def LoadNodes(JSONObj):
         nodeDict[node["nodeID"]] = node
     return nodeDict
 
-
 def CreateCIData(nodeID: str, itemPos: QPointF, itemScale:float):
     """Creates data for a new CI (CanvasItem)
 
@@ -76,6 +75,7 @@ def CreateCIData(nodeID: str, itemPos: QPointF, itemScale:float):
         Dict: returns a dictionary of nodeID, itemPos, and itemScale 
     """
     canvasItem = {
+        "canvasItemID": GenerateID(),
         "nodeID": nodeID,
         "itemPos": [itemPos.x(), itemPos.y()],
         "itemScale": itemScale
@@ -126,6 +126,7 @@ def CreateImageData(imagePath, nodeName = "Image_Node"):
             "nodeName": nodeName,
             "nodeID": GenerateID(),
             "creationTime": time(),
+            "canvasItemReferences": [],
             "imagePath": imagePath
         }
         return node
@@ -149,6 +150,7 @@ def CreateTextData(text, nodeName = "Text_Node"):
         "nodeName": nodeName,
         "nodeID": GenerateID(),
         "creationTime": time(),
+        "canvasItemReferences": [],
         "nodeText": text
     }
     return node

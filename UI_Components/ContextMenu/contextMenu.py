@@ -59,27 +59,18 @@ def CanvasItemContextMenu(self, event):
             self.RemoveCanvasItem(item)
 
     # ----- Insert Canvas Items -----
-    elif action == insertImage:         # Insert Images
+    elif action == insertImage:         # Insert Image CanvasItem
         imageFiles = QFileDialog.getOpenFileNames(self,"Select Images",".","Images (*.jpg *.png *.gif)")
 
         i = 0
         for filePath in imageFiles[0]:
-            imageNodeData = CreateImageData(filePath)
-            canvasItemData = CreateCIData(imageNodeData["nodeID"], clickPos + QPointF(10*i, 10*i),1)
-
-            self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
-            self.InsertCanvasItem(canvasItemData)   # Insert text node
+            position = clickPos + QPointF(10*i, 10*i)
+            self.NewImageCanvasItem(filePath, position)
             i += 1
 
-    elif action == insertText:
-        # Generate Text data
-        textNodeData = CreateTextData("Text")
-        newID = textNodeData["nodeID"]
-        canvasItemData = CreateCIData(newID, clickPos, 1)
+    elif action == insertText:          # Insert Text CanvasItem
+        self.NewTextCanvasItem("Text", clickPos, 1)
 
-        self.SetAllData(canvasItemData, textNodeData)   # Set data to databases
-
-        self.InsertCanvasItem(canvasItemData)   # Insert text node
 
     elif action == saveProject:
         print("SAVE")

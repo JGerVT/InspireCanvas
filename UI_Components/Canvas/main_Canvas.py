@@ -92,9 +92,8 @@ class MainCanvas(QGraphicsView):
         self.horizontalScrollBar().setValue(tabData["viewportPos"][0])
         self.verticalScrollBar().setValue(tabData["viewportPos"][1])
 
-        canvasItems = tabData["canvasItems"]
+        self.canvasItemData = tabData["canvasItems"]
 
-        self.canvasItemData = canvasItems
         self.RemoveAllSelected()
 
         for item in self.mainScene.items(): # Only remove CanvasItems
@@ -103,12 +102,12 @@ class MainCanvas(QGraphicsView):
 
         self.canvasItems.clear()    # Remove all items on canvas
 
-        for canvasItem in canvasItems:          # Add all canvas items from canvasItems to the canvas. 
-            self.InsertCanvasItem(canvasItem)
+        for canvasItemData in self.canvasItemData:          # Add all canvas items from canvasItems to the canvas. 
+            self.InsertCanvasItem(canvasItemData)
 
         self.SetCanvasItemCount()   # This is needed if no CanvasItems are present, otherwise it will not show the message
         self.StoreZoomAmt()
-
+        
     # ----- ADD, REMOVE, and Copy CanvasItems -----
     def InsertCanvasItem(self, canvasItemData):
         """ Add CanvasItem to the canvas. This will check which type of CanvasItem is passed and create the correct CanvasItem
@@ -134,6 +133,7 @@ class MainCanvas(QGraphicsView):
         else:   # If type is not valid, do not add to database.
             return None
 
+        self.SetReference(canvasItemData["nodeID"], canvasItemData["canvasItemID"])  # Update Reference
 
         return self.AddCanvasItemToScene(newCanvasItem)
 
@@ -166,13 +166,14 @@ class MainCanvas(QGraphicsView):
         self.RemoveSelected(canvasItem)
 
         self.tabData["canvasItems"].pop(self.tabData["canvasItems"].index(canvasItem.canvasItemData))   # Remove data from canvasItem Database
-        if removeNodeData:
+
+        if self.RemoveReference(canvasItem.canvasItemData["nodeID"], canvasItem.canvasItemData["canvasItemID"]) == 0:   # If there are no more references to the item in the database, delete from database
             del self.nodeHashTable[canvasItem.nodeID]
 
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
 
-    def CopyCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
+    def DuplicateCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
         """This function will duplicate a given CanvasItem data at the desired location. 
 
         Args:
@@ -189,6 +190,45 @@ class MainCanvas(QGraphicsView):
         
         return canvasItem
 
+    # Insert New CanvasItem
+    #   New Image CanvasItem
+    def NewImageCanvasItem(self, imagePath: str, position: QPointF, scale = 1):
+        """Create a new Image Canvas Item
+
+        Args:
+            imagePath (str): path to the image
+
+        Returns:
+            CanvasItem: Returns the new Canvas Item
+        """
+        imageNodeData = CreateImageData(imagePath)
+        canvasItemData = CreateCIData(imageNodeData["nodeID"], position, scale)
+        imageNodeData["canvasItemReferences"].append(canvasItemData["canvasItemID"])
+
+        self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
+        self.InsertCanvasItem(canvasItemData)   # Insert text node
+    #   New Text CanvasItem
+    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1):
+        """ Create a new Text Canvas Item
+
+        Args:
+            text (str): Text to be set to the Text CanvasItem
+            position (QPointF): initial position of the CanvasItem
+            scale (int, optional): scale of the TextCanvasItem. Defaults to 1.
+
+        Returns:
+            _type_: _description_
+        """
+        textNodeData = CreateTextData(text)
+        newID = textNodeData["nodeID"]
+        canvasItemData = CreateCIData(newID, position, scale)
+
+        self.SetAllData(canvasItemData, textNodeData)   # Set data to databases
+
+        canvasItem = self.InsertCanvasItem(canvasItemData)   # Insert text node
+
+        return canvasItem
+    
     # ________________________________________
     
     # ----- Copy and Paste -----
@@ -209,8 +249,9 @@ class MainCanvas(QGraphicsView):
         for item in self.copyCanvasItemData:
             newLocation = clickPos + item["offsetPos"]
 
-            item = self.CopyCanvasItem(item["nodeID"], newLocation, item["scale"])
+            item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
             item.AddSelected(True)
+
     # ________________________________________
 
     # _______________ Utility _______________
@@ -248,6 +289,24 @@ class MainCanvas(QGraphicsView):
         """
         for node in self.canvasItems:
             node.setZValue(self.canvasItems.index(node))
+    
+    # Manage Node References
+    def SetReference(self, nodeID, canvasItemID):
+        """Add CanvasItem reference to the node in the node database"""
+        if canvasItemID not in self.nodeHashTable[nodeID]["canvasItemReferences"]:
+            self.nodeHashTable[nodeID]["canvasItemReferences"].append(canvasItemID)
+
+
+    def RemoveReference(self, nodeID, canvasItemID):
+        del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
+
+        if canvasItemID in self.nodeHashTable[nodeID]["canvasItemReferences"]:
+            del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
+
+        print(self.nodeHashTable[nodeID]["canvasItemReferences"])
+
+        return len(self.nodeHashTable[nodeID]["canvasItemReferences"])
+
     # ---------------
 
     # ----- Get -----
@@ -283,7 +342,8 @@ class MainCanvas(QGraphicsView):
             canvasItem (CanvasItem): The CanvasItem that will be moved to the front.
         """
         self.canvasItems.append(self.canvasItems.pop(self.canvasItems.index(canvasItem)))
-        self.canvasItemData.append(self.canvasItemData.pop(self.canvasItemData.index(canvasItem.canvasItemData))) # Move canvasItemData to front of list, so it persists across sessions
+        self.canvasItemData.append(self.canvasItemData.pop(self.canvasItemData.index(canvasItem.canvasItemData)))
+
         self.SetZValues()
 
     def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = False):
@@ -483,7 +543,6 @@ class MainCanvas(QGraphicsView):
             self.AddSubtractZoom(.1)
 
     def keyPressEvent(self, event) -> None:
-        print(GenerateID())
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
             self.mainScene.keyPressEvent(event)
             return True        
@@ -657,12 +716,7 @@ class MainScene (QGraphicsScene):
                     urlTemp = url.toLocalFile()
                     
                     if urlType in imageFileTypes: # Is an image file type.
-                        nodeData = CreateImageData(url.toLocalFile())   # Do this first to ensure that the file exists.
-                        canvasItemData = CreateCIData(nodeData["nodeID"], initPosition, 1)
-
-                        self.mainView.SetAllData(canvasItemData, nodeData)
-                        self.mainView.InsertCanvasItem(canvasItemData)
-
+                        self.mainView.NewImageCanvasItem(url.toLocalFile(), initPosition)
                         initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
 
                     else: # Is a file type
