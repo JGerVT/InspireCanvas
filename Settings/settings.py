@@ -14,7 +14,7 @@ from Utility import ConsoleLog
 
 # Software Settings
 defaultAccentColor = "#23A0FF"
-JSONProjectLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
+# JSONProjectLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
 softwareIconLocation = "Resources\inspireCanvasIcon.png" #Icon Location
 startingWindowSize = [1200, 800] # Default software size
 MaxSize = 16777215

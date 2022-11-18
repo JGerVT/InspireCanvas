@@ -20,7 +20,7 @@ from Settings.settings import *
 from UI_Components.ContextMenu.contextMenu import *
 
 class MainTopBar(QWidget):
-    def __init__(self, parent, selectedTab : int, tabsData, projectName = "Project") -> None:
+    def __init__(self, parent, projectName = "Project") -> None:
         """ 
         Top Bar of software. Contains Tabs and window buttons
         
@@ -32,12 +32,11 @@ class MainTopBar(QWidget):
 
         # Properties
         self.MainContent = parent
-        self.selectedTab = selectedTab
-        self.tabsData = tabsData
+        self.selectedTab = 0
         self.projectName = projectName
+        self.tabHashTable = None
 
-        self.copyTab = None
-
+        self.copyTab = None     # If a tab is being copied, it will be stored here.
 
         # Set Attributes
         self.setObjectName = "MainTopBar"
@@ -47,10 +46,9 @@ class MainTopBar(QWidget):
 
         # Widgets in top bar
         self.hamburgerButton = HamburgerButton(self)
-        self.TabContainer = TabContainer(self, selectedTab = self.selectedTab, tabsData = self.tabsData, MainContent = self.MainContent)
+        self.TabContainer = TabContainer(self, MainContent = self.MainContent)
         self.AddTabButton = AddTabButton(self)
         self.WindowOptions = WindowOptions(self)
-
 
         # Layouts
         hLayout = QHBoxLayout(self)
@@ -63,6 +61,10 @@ class MainTopBar(QWidget):
         LayoutRemoveSpacing(hLayout)
 
         # Init
+
+    def SetTabs(self, tabHashTable, selectedTab):
+        self.tabHashTable = tabHashTable
+        self.TabContainer.SetTabs(selectedTab)
 
     def GetCopy(self):
         return self.copyTab
@@ -86,7 +88,7 @@ class HamburgerButton(QPushButton):
         self.setCheckable(True)
         self.setFixedSize(QSize(50, topBarHeight))
 
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        # self.setCursor(QCursor(Qt.PointingHandCursor))
 
         self.icon_  = QPixmap('Resources\svg\hamburger.svg')
         self.setIcon(self.icon_)
@@ -98,7 +100,7 @@ class HamburgerButton(QPushButton):
 
 class TabContainer(QWidget):
     SelectTab = Signal(str) # When tab is selected, send signal to mainContent.py
-    def __init__(self, parent, tabsData, MainContent, selectedTab = 0) -> None:
+    def __init__(self, parent, MainContent) -> None:
         """Container of all tabs in project
 
         Args:
@@ -111,15 +113,13 @@ class TabContainer(QWidget):
         # References
         self.MainContent = MainContent
 
-
         # Set Attributes
         self.setObjectName("TabsContainer")
 
         # Properties and Data
         self.mainTopBar = parent
-        self.selectedTabIndex = selectedTab
+        self.selectedTabIndex = 0
         self.selectedTabWidget = None             
-        self.tabsData = tabsData
 
         #Layout
         self.hBoxLayout = QHBoxLayout(self)
@@ -128,21 +128,30 @@ class TabContainer(QWidget):
         # Events
         self.MainContent.FinishedInitializing.connect(self.FinishedInitializing)
 
-        # Add Tabs
-        self.AddTabsData(self.tabsData)
 
-    def GetCopy(self):
-        return self.mainTopBar.GetCopy()
-
-    def SetCopy(self, copy):
-        self.mainTopBar.SetCopy(copy)
-
+    # Initialization
     def FinishedInitializing(self): 
         """When the main content is all initialized. This function emits a signal when a new tab is selected and calls self.SetSelected to update the canvas"""
         self.SelectTab.connect(self.MainContent.TabSelected)
-        self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))  # Set selected tab on initialization
+        # self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))  # Set selected tab on initialization
 
-    def AddTabsData(self, tabsData):
+    # Add/Set/Removing Tabs
+    def SetTabs(self, selectedTab):
+        self.selectedTabIndex = selectedTab
+
+        self.RemoveAllTabs()
+        self.AddTabsFromData(self.mainTopBar.tabHashTable)
+
+        self.SetSelectedWidget(self.GetTab(selectedTab))
+
+    def RemoveAllTabs(self):
+        for index in reversed(range(self.hBoxLayout.count())):
+            widget = self.hBoxLayout.itemAt(index).widget()
+            if widget.__class__.__name__ == "Tab":
+                self.hBoxLayout.removeWidget(widget)
+                widget.deleteLater()
+
+    def AddTabsFromData(self, tabsData):
         for key in tabsData:
             self.AddTab(tabsData[key]["tabID"], tabsData[key]["tabName"], tabsData[key]["tabColor"], setSelected = False)
 
@@ -155,7 +164,7 @@ class TabContainer(QWidget):
         newID = GenerateID()
         
         tabData = CreateTabData(tabName="Tab", tabID = newID, canvasItems=[]) 
-        self.mainTopBar.tabsData[newID] = tabData
+        self.mainTopBar.tabHashTable[newID] = tabData
         newTab = self.AddTab(newID, tabData["tabName"], setSelected = False)
 
         if index != None:
@@ -166,10 +175,10 @@ class TabContainer(QWidget):
         newID = GenerateID()
         tabName = tabWidget.name
         tabColor = tabWidget.color
-        canvasItems = copy.deepcopy(self.mainTopBar.tabsData[tabWidget.tabID]["canvasItems"])
+        canvasItems = copy.deepcopy(self.mainTopBar.tabHashTable[tabWidget.tabID]["canvasItems"])
 
         tabData = CreateTabData(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems) 
-        self.mainTopBar.tabsData[newID] = tabData
+        self.mainTopBar.tabHashTable[newID] = tabData
         newTab = self.AddTab(newID, tabName, setSelected = False)
 
         if index != None:
@@ -177,7 +186,7 @@ class TabContainer(QWidget):
             self.hBoxLayout.insertWidget(index + 1, newTab)
 
     def AddTab(self, tabID, name = "", color = "#23A0FF", setSelected = True):
-        tab = Tab(self, tabID, name, color)
+        tab = Tab(self, tabID, name, color, mainContent=self.MainContent)
         self.hBoxLayout.addWidget(tab)
         if setSelected:
             self.SetSelectedWidget(tab)
@@ -200,7 +209,7 @@ class TabContainer(QWidget):
 
         if self.GetNumberOfTabs() > 1:
             # Delete widget
-            del self.tabsData[tabWidget.tabID]
+            del self.mainTopBar.tabHashTable[tabWidget.tabID]
             tabWidget.deleteLater()
 
             if index < self.GetNumberOfTabs() - 1: # If tab is not last in tab container
@@ -233,12 +242,24 @@ class TabContainer(QWidget):
             else:
                 widget.SetSelected(False)
 
-    def GetTab(self, index):
-        """Retrieve a tab widget by it's index in the layout"""
-        for ind in range(self.hBoxLayout.count()):
-            if self.hBoxLayout.itemAt(index).widget().__class__.__name__ == "Tab":
-                if ind == index:
-                    return self.hBoxLayout.itemAt(index).widget()
+    def GetTab(self, tabID: str):
+        """Retrieve a tab widget by it's index in the layout
+           
+        Args:
+            tabID (str): get the tab widget with this tabID
+
+        Return:
+            If a tab with the desired tabID is found, return the Tab widget
+        """
+
+        for index in range(self.hBoxLayout.count()):        # Loop through all tabs in the tabContainer
+            tab = self.hBoxLayout.itemAt(index).widget()  
+            if tab.__class__.__name__ == "Tab":         
+                if tab.tabID == tabID:                 # If a tab with the desired tabID is found, return the Tab widget
+                    return tab
+        
+        return None # If tab was not found, return None.
+        
 
     def GetSelectedIndex(self):
         return self.hBoxLayout.indexOf(self.selectedTabWidget)
@@ -271,8 +292,15 @@ class TabContainer(QWidget):
             self.hBoxLayout.removeWidget(tabWidget)
             self.hBoxLayout.insertWidget(index - 1, tabWidget)
 
+    def GetCopy(self):
+        return self.mainTopBar.GetCopy()
+
+    def SetCopy(self, copy):
+        self.mainTopBar.SetCopy(copy)
+
+
 class Tab(QWidget):
-    def __init__(self, parent, tabID, name = "Tab", color = "#23A0FF")  -> None:
+    def __init__(self, parent, tabID, name = "Tab", color = "#23A0FF", mainContent = None)  -> None:
         """Clickable button that displays the current tab the user is on. Clicking the tab while switch to that tab, remove all nodes from the canvas and add all nodes from selected tab.
 
         Args:
@@ -283,6 +311,7 @@ class Tab(QWidget):
 
         # References
         self.tabContainer = parent
+        self.MainContent = mainContent
 
         # Set Attributes
         self.setObjectName("Tab")

@@ -76,18 +76,22 @@ def CanvasItemContextMenu(self, event):
     elif action == saveProject:
         saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
         if(saveLocation[0] != ""):
-            self.SaveJSON(saveLocation[0])
+            self.MainContent.SaveProject(saveLocation[0])
 
     elif action == loadProject:
         dataFile = QFileDialog.getOpenFileName(self, "Select JSON Project", ".", "JSON (*.json)")
         
         if dataFile[0] != "":
-            ProjectJSONObject = LoadJSON(dataFile[0], False)
-
-            if ProjectJSONObject != None:
-                print("LOAD JSON PROJECT") 
+            if LoadJSON(dataFile[0], False) != None:   # This is used to validate if the data is valid
+                self.MainContent.LoadProject(dataFile[0])
             else:
                 print("ERROR")               
+
+    elif action == newProject:
+        newProjectLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
+        
+        if newProjectLocation[0] != "":
+            self.MainContent.NewProject(newProjectLocation[0])
 
 
 # ----- Tab Bar Context Menu -----
@@ -143,11 +147,24 @@ def TabBarContextMenu(self, event):
         else:
             self.tabContainer.createNewTab()
     elif action == saveProject:     # Save Project
-        print("SAVE")
+        saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
+        if(saveLocation[0] != ""):
+            self.MainContent.SaveProject(saveLocation[0])
+
     elif action == loadProject:     # Load Project
-        print("load")
+        dataFile = QFileDialog.getOpenFileName(self, "Select JSON Project", ".", "JSON (*.json)")
+        
+        if dataFile[0] != "":
+            if LoadJSON(dataFile[0], False) != None:   # This is used to validate if the data is valid
+                self.MainContent.LoadProject(dataFile[0])
+            else:
+                print("ERROR")
+
     elif action == newProject:      # New Project
-        print("new")
+        newProjectLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
+        
+        if newProjectLocation[0] != "":
+            self.MainContent.NewProject(newProjectLocation[0])
 
 
 

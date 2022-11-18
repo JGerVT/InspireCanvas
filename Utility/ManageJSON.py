@@ -40,14 +40,16 @@ def LoadJSON(fileLocation, createNewProjectOnFail = True):
     except IOError:                     # Failed to read JSON file
         ConsoleLog.error("JSON Project Read", "Unable to read JSON file in at [" + fileLocation + "]")
         if createNewProjectOnFail:
-            ProjectJSONObject = NewProject("Project", 0, [10000, 10000], [CreateTabData("Tab", GenerateID(), [])], [])["Project"]
+            tabID = GenerateID()
+            ProjectJSONObject = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
             return ProjectJSONObject
         else:
             return None
     except exceptions.ValidationError:  # JSON Data formatting is invalid
         ConsoleLog.error("JSON Project Read", "Invalid JSON file at [" + fileLocation + "]")
         if createNewProjectOnFail:
-            ProjectJSONObject = NewProject("Project", 0, [10000, 10000], [CreateTabData("Tab", GenerateID(), [])], [])["Project"]
+            tabID = GenerateID()
+            ProjectJSONObject = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
             return ProjectJSONObject
         else:
             return None
@@ -177,7 +179,7 @@ def CreateTextData(text, nodeName = "Text_Node"):
     return node
 
 
-def NewProject(projectName, selectedTab, canvasSize, tabs, nodes):
+def NewProjectData(projectName, selectedTab, canvasSize, tabs, nodes):
     newJSON = {
         "Project":{
             "projectName": projectName,
@@ -194,13 +196,13 @@ def SaveJSON(JSON_DATA, saveLocation = None):
     newJSON = {
         "Project": JSON_DATA
     }
-
-    if saveLocation != None:
-        JSONProjectLocation = saveLocation
-
-    f = open(JSONProjectLocation, "w+")
-    f.write(json.dumps(newJSON, indent=4))
-    f.close()
+    print("Save data to: " + saveLocation)
+    try: 
+        f = open(saveLocation, "w+")
+        f.write(json.dumps(newJSON, indent=4))
+        f.close()
+    except:
+        ConsoleLog.error("Error Reading JSON", "Unable to read JSON file at " + saveLocation + ".")
 
 
 # ----- Validate JSON -----
@@ -209,7 +211,7 @@ def ValidateJSON(JSON_DATA):
         "type":"object",
         "properties":{           
             "projectName": {"type":"string"},
-            "selectedTab": {"type": "number"},
+            "selectedTab": {"type": "string"},
             "canvasSize": {"type": "array"},
             "tabs": {"type": "array"},
             "nodes": {"type": "array"}            

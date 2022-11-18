@@ -33,15 +33,18 @@ class MainContent(QWidget):
         self.setStyleSheet("background-color: #1F2123; border: none") # 1a1c1e
 
         # Properties
-        self.isCanvasEmpty = True
-        self.JSONData = LoadJSON(JSONProjectLocation)
-        self.tabHashTable = LoadTabs(self.JSONData)
-        self.nodeHashTable = LoadNodes(self.JSONData)
-        self.currentSelectedTab = None
+        self.isCanvasEmpty = True       # Managed by self.canvas
+        self.projectName = "Project"
+        self.JSONData = None
+        self.tabHashTable = None
+        self.nodeHashTable = None
+        self.selectedTab = None
+        self.canvasSize = None
+        self.saveLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
 
         # Elements
-        self.topBar = MainTopBar(self, tabsData = self.tabHashTable, projectName = GetProjectName(self.JSONData), selectedTab = GetSelectedTab(self.JSONData))  # Top Bar 
-        self.canvas = MainCanvas(self, self.nodeHashTable, canvasSize= self.JSONData["canvasSize"])  # Main Canvas
+        self.topBar = MainTopBar(self, projectName = self.projectName)  # Top Bar 
+        self.canvas = MainCanvas(self)  # Main Canvas
         self.zoomButtons = ZoomButtons(self)
 
         # Layouts
@@ -50,8 +53,73 @@ class MainContent(QWidget):
         vLayout.addWidget(self.canvas)  # Add Canvas 
         LayoutRemoveSpacing(vLayout)
 
+        # INIT
+        #! Load settings before loading project
+        self.LoadProject(self.saveLocation)
+
         # Signals
         self.FinishedInitializing.emit()    # Emit signal when main content has finished initialization
+
+    def LoadProject(self, fileLocation: str = "", JSONData = None):
+        """This function is what initializes all of the data within the project and calls the functions to set the data for the canvas and Tabs
+
+        Args:
+            fileLocation (str): Where the JSON project data is stored.
+        """
+        # Get Data from JSON File
+        if JSONData == None:
+            self.JSONData = LoadJSON(fileLocation)
+        else:
+            self.JSONData = JSONData
+        self.tabHashTable = LoadTabs(self.JSONData)
+        self.nodeHashTable = LoadNodes(self.JSONData)
+        self.projectName = self.JSONData["projectName"]
+        self.selectedTab = self.JSONData["selectedTab"]
+        self.canvasSize = self.JSONData["canvasSize"]
+
+        # Initialize Data on Tabs and Canvas
+        self.topBar.SetTabs(self.tabHashTable, self.selectedTab)
+        self.canvas.SetCanvasData(self.nodeHashTable, canvasSize = self.JSONData["canvasSize"])
+
+        # Initialize Tab Selection
+        if self.selectedTab in self.tabHashTable:   # Set selected tab to the selectedTab ID.
+            self.canvas.TabSelected(self.tabHashTable[self.selectedTab])
+        elif len(self.tabHashTable.items()) > 0:    # If selected tabID is not in database and items exist in tab database, set to 0
+            self.canvas.TabSelected(self.JSONData["tabs"][0]["tabID"])
+        else:
+            ConsoleLog.error("Tab Missing", "Tab [" + str(self.selectedTab) + "] not found in 'tabs'.")
+
+    def SaveProject(self, saveLocation: str = None):
+        """Save the project to a JSON file.
+
+        Args:
+            saveLocation (str): location where the project will be saved.
+        """
+        if saveLocation == None:    # If no save location is passed, the currently loaded JSON project will be overwritten 
+            saveLocation = self.saveLocation
+
+        self.UpdateJSONData()
+        try:    # If unable to save the json file, continue
+            SaveJSON(self.JSONData, saveLocation)
+            self.saveLocation = saveLocation
+        except: 
+            pass
+
+
+    def NewProject(self, projectLocation):
+        """Create a new project
+        """
+        tabID = GenerateID()
+        newProjectData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
+
+        try:    # If unable to save the json file, continue
+            SaveJSON(newProjectData, projectLocation)
+            self.saveLocation = projectLocation
+            self.LoadProject(JSONData = newProjectData)
+        except: 
+            print("FAILED")
+            pass
+        
 
     def TabSelected(self, tabID : str):
         """When a tab is selected in 'self.topBar', a signal will be emitted, calling this function.
@@ -59,11 +127,10 @@ class MainContent(QWidget):
         Arg:
             tabID (str) : The tabID to set to selected.
         """
-        if tabID != self.currentSelectedTab:    # If new tab is selected, select the tab
+        if tabID != self.selectedTab:    # If new tab is selected, select the tab
             self.canvas.TabSelected(self.tabHashTable[tabID])
-            self.currentSelectedTab = tabID
-
-        # self.UpdateJSONData() #! REMOVE (FOR TESTING)
+            self.selectedTab = tabID
+            self.JSONData["selectedTab"] = tabID
 
     def UpdateJSONData(self):
         dictList = []

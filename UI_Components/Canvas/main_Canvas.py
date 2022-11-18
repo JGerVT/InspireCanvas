@@ -21,7 +21,7 @@ from UI_Components.ContextMenu.contextMenu import *
 
 class MainCanvas(QGraphicsView):
     IsCanvasEmpty = Signal(bool)
-    def __init__(self, parent, nodeHashTable, canvasSize = [5000, 5000]) -> None:
+    def __init__(self, parent) -> None:
         """This class provides the (QGraphicsView) canvas where all CanvasItems will be placed.
 
         Args:
@@ -47,11 +47,11 @@ class MainCanvas(QGraphicsView):
 
         # _____ References _____
         self.MainContent = parent
-        self.nodeHashTable = nodeHashTable
+        self.nodeHashTable = None
         self.tabData = None
 
         # _____ Properties _____
-        self.canvasSize = canvasSize
+        self.canvasSize = None
         self.canvasItems = []
         self.canvasItemData = [] #Copy of canvas item data. Used for persistent data
 
@@ -62,20 +62,27 @@ class MainCanvas(QGraphicsView):
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
         # _____ Main Scene _____
-        self.mainScene = MainScene(0,0, self.canvasSize[0], self.canvasSize[1], self)   # Set main Scene
+        self.mainScene = None   # Main scene is set in SetCanvasData
         self.setScene(self.mainScene)
 
         # _____ Highlight Selection _____
         self.selectionHighlight = SelectionHighlight(self)
-        self.mainScene.addItem(self.selectionHighlight)
 
         # _____ Item Group For Selection _____
         self.selectedItemGroup = ItemGroup(mainView=self)
         self.selectedItemGroup.setZValue(9998)
-        self.mainScene.addItem(self.selectedItemGroup)
 
         # _____ Signals _____
         self.IsCanvasEmpty.connect(self.MainContent.setCanvasEmpty)
+
+    def SetCanvasData(self, nodeHashTable, canvasSize):
+        self.canvasSize = canvasSize
+        self.nodeHashTable = nodeHashTable
+        self.mainScene = MainScene(0,0, canvasSize[0], canvasSize[1], self)   # Set main Scene
+        self.setScene(self.mainScene)
+        self.mainScene.addItem(self.selectionHighlight)
+        self.mainScene.addItem(self.selectedItemGroup)
+
 
     def TabSelected(self, tabData):
         """Set canvas items on the canvas to a list of canvasItems.
