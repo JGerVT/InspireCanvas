@@ -109,15 +109,8 @@ def TabBarContextMenu(self, event):
     pasteItem = contextMenu.addAction("Paste Tab")          # Paste Tab
     closeItem = contextMenu.addAction("Delete Tab")         # Delete Tab
     duplicateItem = contextMenu.addAction("Duplicate Tab")  # Duplicate Tab
-
-    if type(self).__name__ != "Tab":
-        print("TRUE")
-        copyItem.setDisabled(True)
-        closeItem.setDisabled(True)
-        duplicateItem.setDisabled(True)
-    
-    if self.GetCopy() == None:
-        pasteItem.setDisabled(True)
+    contextMenu.addSeparator()
+    renameTab = contextMenu.addAction("Rename Tab")         # Rename Tab 
 
     contextMenu.addSeparator()
     newTabItem = contextMenu.addAction("New Tab")           # Add New Tab
@@ -125,7 +118,15 @@ def TabBarContextMenu(self, event):
     saveProject = contextMenu.addAction("Save Project")     # Save Project
     loadProject = contextMenu.addAction("Load Project")     # Load Project
     newProject = contextMenu.addAction("New Project")       # New Project
-
+    
+    
+    if type(self).__name__ != "Tab":
+        copyItem.setDisabled(True)
+        closeItem.setDisabled(True)
+        duplicateItem.setDisabled(True)
+    
+    if self.GetCopy() == None:
+        pasteItem.setDisabled(True)
 
     # Actions
     action = contextMenu.exec_(self.mapToGlobal(event.pos()))
@@ -141,6 +142,10 @@ def TabBarContextMenu(self, event):
         self.tabContainer.DeleteTab(self)
     elif action == duplicateItem:                           # If duplicate Tab, Duplicate Tab
         self.tabContainer.duplicateTab(self, self.getIndex())
+    elif action == renameTab:                               # if renameTab, enable text selection on tab label, and select all. 
+        self.label.setEnabled(True)
+        self.label.setFocus()
+        self.label.selectAll()
     elif action == newTabItem:                              # If newTabItem, insert a new tab after selected tab
         if type(self).__name__ == "Tab":
             self.tabContainer.createNewTab(self.getIndex())

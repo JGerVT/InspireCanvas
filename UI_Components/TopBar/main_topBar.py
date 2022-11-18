@@ -463,7 +463,9 @@ class TabText(QLineEdit):
     def mouseDoubleClickEvent(self, event) -> None:
         if not self.isEnabled():
             self.setEnabled(True)
-        return super().mouseDoubleClickEvent(event)
+            self.setFocus()
+            self.selectAll()
+        # return super().mouseDoubleClickEvent(event)
 
 
 class AddTabButton(QPushButton):
