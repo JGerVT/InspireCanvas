@@ -223,7 +223,8 @@ class TabContainer(QWidget):
 
     def SetSelectedWidget(self, tabWidget):
         self.selectedTabWidget = tabWidget
-        self.SelectTab.emit(tabWidget.tabID)
+        if tabWidget != None:
+            self.SelectTab.emit(tabWidget.tabID)
 
         for index in range(self.hBoxLayout.count()):
             widget = self.hBoxLayout.itemAt(index).widget()

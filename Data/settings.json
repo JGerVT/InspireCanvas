@@ -1,0 +1,6 @@
+{
+    "defaultAccentColor":"#23A0FF",
+    "jsonProjectLocation":"Data\\defaultDatabase.json",
+    "minMaxZoom": [0.05, 5],
+    "imageFileTypes":[".jpg", ".png", ".jpeg", ".bmp", ".gif", ".webp"]
+}

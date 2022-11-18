@@ -32,3 +32,12 @@
 2022-10-12 23:03:52.083876: [ERROR] Drop Error - Could not add Canvas Item
 2022-10-12 23:04:09.751867: [ERROR] Drop Error - Could not add Canvas Item
 2022-10-12 23:04:52.534801: [ERROR] Drop Error - Could not add Canvas Item
+2022-11-15 15:58:40.911580: [ERROR] JSON Project Read - Invalid JSON file at [E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json]
+2022-11-15 15:58:56.684606: [ERROR] JSON Project Read - Invalid JSON file at [E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json]
+2022-11-15 16:04:14.181389: [ERROR] JSON Project Read - Invalid JSON file at [E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json]
+2022-11-15 16:08:40.195928: [ERROR] JSON Project Read - Invalid JSON file at [E:/OneDrive/Software Development/Inspire Canvas - Fall 2022/Inspire Canvas - Applied Software Fall 2022/Data/settings.json]
+2022-11-15 16:09:17.450356: [ERROR] JSON Project Read - Invalid JSON file at [E:/OneDrive/Software Development/Inspire Canvas - Fall 2022/Inspire Canvas - Applied Software Fall 2022/Data/settings.json]
+2022-11-15 16:09:30.024227: [ERROR] JSON Project Read - Invalid JSON file at [E:/OneDrive/Software Development/Inspire Canvas - Fall 2022/Inspire Canvas - Applied Software Fall 2022/Data/settings.json]
+2022-11-18 09:51:37.547071: [ERROR] Item [eb5496af-ab22-4e0e-8220-0147ac468b6c] not found in database. - 
+2022-11-18 09:51:37.561950: [ERROR] Item [eb5446af-ab22-4e0e-8220-0147ac468b6c] not found in database. - 
+2022-11-18 09:51:37.562446: [ERROR] Item [ab5426af-ab12-2e0e-8220-0147ac468b6c] not found in database. - 

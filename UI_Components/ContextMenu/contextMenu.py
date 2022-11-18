@@ -42,7 +42,7 @@ def CanvasItemContextMenu(self, event):
     insertText = insertMenu.addAction("Insert Text")        # Insert Text CanvasItem
     insertFile = insertMenu.addAction("Insert File")        # Insert File CanvasItem
     contextMenu.addSeparator()                          # Project Management
-    saveProject = contextMenu.addAction("Save Project")     # Save Project
+    saveProject = contextMenu.addAction("Save Project As")     # Save Project
     loadProject = contextMenu.addAction("Load Project")     # Load Project
     newProject = contextMenu.addAction("New Project")       # New Project
 
@@ -62,19 +62,32 @@ def CanvasItemContextMenu(self, event):
     elif action == insertImage:         # Insert Image CanvasItem
         imageFiles = QFileDialog.getOpenFileNames(self,"Select Images",".","Images (*.jpg *.png *.gif)")
 
-        i = 0
-        for filePath in imageFiles[0]:
-            position = clickPos + QPointF(10*i, 10*i)
-            self.NewImageCanvasItem(filePath, position)
-            i += 1
+        if imageFiles[0] != "":
+            i = 0
+            for filePath in imageFiles[0]:
+                position = clickPos + QPointF(10*i, 10*i)
+                self.NewImageCanvasItem(filePath, position)
+                i += 1
 
     elif action == insertText:          # Insert Text CanvasItem
         self.NewTextCanvasItem("Text", clickPos, 1)
 
 
     elif action == saveProject:
-        print("SAVE")
+        saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
+        if(saveLocation[0] != ""):
+            self.SaveJSON(saveLocation[0])
 
+    elif action == loadProject:
+        dataFile = QFileDialog.getOpenFileName(self, "Select JSON Project", ".", "JSON (*.json)")
+        
+        if dataFile[0] != "":
+            ProjectJSONObject = LoadJSON(dataFile[0], False)
+
+            if ProjectJSONObject != None:
+                print("LOAD JSON PROJECT") 
+            else:
+                print("ERROR")               
 
 
 # ----- Tab Bar Context Menu -----

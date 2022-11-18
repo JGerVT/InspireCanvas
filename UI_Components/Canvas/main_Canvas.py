@@ -307,6 +307,10 @@ class MainCanvas(QGraphicsView):
 
         return len(self.nodeHashTable[nodeID]["canvasItemReferences"])
 
+    def SaveJSON(self, saveLocation = None):
+        self.MainContent.UpdateJSONData()
+        SaveJSON(self.MainContent.JSONData, saveLocation) 
+
     # ---------------
 
     # ----- Get -----

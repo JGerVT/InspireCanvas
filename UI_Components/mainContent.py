@@ -34,7 +34,7 @@ class MainContent(QWidget):
 
         # Properties
         self.isCanvasEmpty = True
-        self.JSONData = LoadJSON(DefaultJSONProjectLocation)
+        self.JSONData = LoadJSON(JSONProjectLocation)
         self.tabHashTable = LoadTabs(self.JSONData)
         self.nodeHashTable = LoadNodes(self.JSONData)
         self.currentSelectedTab = None
@@ -62,6 +62,20 @@ class MainContent(QWidget):
         if tabID != self.currentSelectedTab:    # If new tab is selected, select the tab
             self.canvas.TabSelected(self.tabHashTable[tabID])
             self.currentSelectedTab = tabID
+
+        # self.UpdateJSONData() #! REMOVE (FOR TESTING)
+
+    def UpdateJSONData(self):
+        dictList = []
+        for key, value in self.nodeHashTable.items():
+            dictList.append(value)
+        self.JSONData["nodes"] = dictList
+
+        tabDictList = []
+        for key, value in self.tabHashTable.items():
+            tabDictList.append(value)
+        self.JSONData["tabs"] = tabDictList
+
 
 
     def setCanvasEmpty(self, isCanvasEmpty: bool):
