@@ -257,7 +257,7 @@ class MainCanvas(QGraphicsView):
             newLocation = clickPos + item["offsetPos"]
 
             item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
-            item.AddSelected(True)
+            self.AddSelected(item)
 
     # ________________________________________
 
@@ -424,6 +424,8 @@ class MainCanvas(QGraphicsView):
             self.horizontalScrollBar().setValue(prevPos.x())
             self.verticalScrollBar().setValue(prevPos.y())
 
+        self.SetSelectionHighlightPos()
+
         # Save changes        
         self.StoreZoomAmt()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
@@ -451,7 +453,7 @@ class MainCanvas(QGraphicsView):
         """
         self.RemoveAllSelected()
         for item in canvasItems:
-            item.AddSelected(True)
+            self.AddSelected(item)
 
     def AddSelected(self, canvasItem):
         """Add node to selection. Does not remove previous selection
@@ -465,6 +467,7 @@ class MainCanvas(QGraphicsView):
         if canvasItem not in self.selectedItemGroup.childItems():  # Make sure item not already selected
             self.selectedItemGroup.addToGroup(canvasItem)
 
+        canvasItem.SetSelected(True)
         self.SetSelectionHighlightPos()
 
     def RemoveSelected(self, canvasItem):
@@ -476,12 +479,14 @@ class MainCanvas(QGraphicsView):
         if canvasItem in self.selectedItemGroup.childItems():  
             self.selectedItemGroup.removeFromGroup(canvasItem)      
 
+        canvasItem.SetSelected(False)
         self.SetSelectionHighlightPos()
         
     def RemoveAllSelected(self):
         """Removes all selected canvasItems from selectedItemGroup"""
         for item in self.selectedItemGroup.childItems():
-            item.SetSelected(False)
+            self.RemoveSelected(item)
+            # item.SetSelected(False)
 
         self.selectedItemGroup.resetTransform()
 
@@ -609,6 +614,21 @@ class MainScene (QGraphicsScene):
             return topWidget
         return None
 
+    def GetTopWidgetAtPos(self, scenePos:QPointF):
+        """Get the top widget at the passed scenePos
+
+        Args:
+            scenePos (QPointF): position to check for widgets
+
+        Returns:
+            CanvasItem: Top widget under mouse 
+        """
+        itemsUnderMouse = self.items(scenePos)
+        for item in itemsUnderMouse:
+            if issubclass(type(item), CanvasItem):  # Check if item is subclassed from CanvasItem.
+                return item
+        return None
+
     # ------ EVENTS ------
     def mousePressEvent(self, event) -> None:   # https://stackoverflow.com/a/3839127
         """Mouse clicked on scene"""
@@ -616,44 +636,33 @@ class MainScene (QGraphicsScene):
         self.prevPos = event.scenePos()
         self.canDrag = True 
 
-        self.pItemUnderMouse = self.items(event.scenePos()) # Detects if theres an item under the mouse click position
-        self.topWidgetUnderMouse:CanvasItem = None
+        # Get top widget
+        self.topWidgetUnderMouse = self.GetTopWidgetAtPos(event.scenePos()) 
 
         # Set initial data for checking delta changes
         self.mainView.selectedItemGroup.SetInitialPos()
         self.mainView.selectedItemGroup.SetInitialSceneBoundingRect()
         self.mainView.selectedItemGroup.SetInitialSceneRectALL()
 
+        #* No Item under mouse, but SelectionHighlight corner IS under mouse
+        if self.mainView.selectionHighlight.isHandleUnderMouse(event.scenePos()):
+            self.canDrag = False
+            self.mainView.selectionHighlight.SetCanDrag(True)
+            return super().mousePressEvent(event)   
 
-        # Get top widget
-        for item in self.pItemUnderMouse:
-            if issubclass(type(item), CanvasItem):  # Check if item is subclassed from CanvasItem.
-                self.topWidgetUnderMouse = item
-                break
-
-
-
-        # If No item under mouse and and corner handle is under mouse, pass to SelectionHighlight
-        if self.pItemUnderMouse != [] and type(self.pItemUnderMouse[0]) == SelectionHighlight:
-            if self.pItemUnderMouse[0].isHandleUnderMouse(event.scenePos()):
-                self.canDrag = False
-                return super().mousePressEvent(event)   
-
-        # No item under mouse click, unselect all items. (i.e. when the user clicks on the canvas)
-        if (not self.topWidgetUnderMouse):  
+        #* No Item or SelectionHighlight under mouse on click (i.e. when the user clicks on the canvas) Unselect all items
+        elif self.topWidgetUnderMouse == None:
             self.mainView.RemoveAllSelected()
             self.canDrag = False
-            return  # Click event has been handled
+            return 
 
-
-
-        # Item is under mouse click.
-        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected() and self.topWidgetUnderMouse.flags() and QGraphicsItem.ItemIsSelectable):
+        #* Item under mouse on click
+        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected()):
             if event.modifiers() and Qt.Modifier.SHIFT: # If Shift held, add item to selection
-                self.topWidgetUnderMouse.AddSelected(True)
+                self.mainView.AddSelected(self.topWidgetUnderMouse)
                 self.canDrag = False
             else:                                       # If Shift is not held, set as only selection.
-                self.topWidgetUnderMouse.SetSelected(True)
+                self.mainView.SetSelected(self.topWidgetUnderMouse)
 
         # If any items are not set to canDrag, don't allow the user to drag the items
         for item in self.mainView.selectedItemGroup.childItems():
@@ -674,6 +683,7 @@ class MainScene (QGraphicsScene):
 
     def mouseReleaseEvent(self, event) -> None:
         self.mainView.selectedItemGroup.SetItemData()
+        self.mainView.selectionHighlight.SetCanDrag(False)
         return super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event) -> None:
@@ -681,12 +691,15 @@ class MainScene (QGraphicsScene):
         if type(self.topWidgetUnderMouse) == TextCanvasItem:
             self.topWidgetUnderMouse.setIsEditable(True)
 
-        try:
-            # Open File
-            pass
-        except:
-            pass
-        return
+        elif type(self.topWidgetUnderMouse) == ImageCanvasItem and self.onlyOneCanvasItemSelected() != None:
+            try:
+                # print(self.topWidgetUnderMouse.imagePath)
+                openFile(self.topWidgetUnderMouse.imagePath)
+                # Open File
+                pass
+            except:
+                pass
+            return
         # return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event) -> None:

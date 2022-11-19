@@ -105,22 +105,6 @@ class MainContent(QWidget):
         except: 
             pass
 
-
-    def NewProject(self, projectLocation):
-        """Create a new project
-        """
-        tabID = GenerateID()
-        newProjectData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
-
-        try:    # If unable to save the json file, continue
-            SaveJSON(newProjectData, projectLocation)
-            self.saveLocation = projectLocation
-            self.LoadProject(JSONData = newProjectData)
-        except: 
-            print("FAILED")
-            pass
-        
-
     def TabSelected(self, tabID : str):
         """When a tab is selected in 'self.topBar', a signal will be emitted, calling this function.
         

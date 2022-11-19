@@ -88,10 +88,8 @@ def CanvasItemContextMenu(self, event):
                 print("ERROR")               
 
     elif action == newProject:
-        newProjectLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
-        
-        if newProjectLocation[0] != "":
-            self.MainContent.NewProject(newProjectLocation[0])
+        tabID = GenerateID()
+        self.MainContent.LoadProject(JSONData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"])
 
 
 # ----- Tab Bar Context Menu -----

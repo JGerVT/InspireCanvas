@@ -445,15 +445,22 @@ class Tab(QWidget):
 
         return super().paintEvent(event)
 
+    def SaveTabText(self, text):
+        self.tabContainer.mainTopBar.tabHashTable[self.tabID]["tabName"] = text
 class TabText(QLineEdit):
     def __init__(self, text, parent)  -> None:
         super().__init__(text, parent)
         self.setEnabled(False)
 
+        # References
+        self.Tab = parent
+
+
         self.returnPressed.connect(self.StopEdit)
 
     def StopEdit(self):
         self.setEnabled(False)
+        self.Tab.SaveTabText(self.text())
 
 
     def focusOutEvent(self, arg__1) -> None:
