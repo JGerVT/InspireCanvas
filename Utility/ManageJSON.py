@@ -8,6 +8,7 @@ Date Updated: 10/17/22
 
 # Imports
 import json
+from jsonschema import validate, exceptions
 from os import path
 from time import time
 
@@ -18,18 +19,40 @@ from PySide6.QtCore import *
 from Utility.UtilityFunctions import GenerateID
 from Settings.settings import * 
 
-def LoadJSON(fileLocation):
+def LoadJSON(fileLocation, createNewProjectOnFail = True):
     """Load the JSON data
 
     Args:
         fileLocation (str) : Name of the location of the JSON data
+        createNewProjectOnFail (bool):    If this is true and the JSON load fails, it will not return a newly created project
     
     Return:
         Returns the data as a Python Object. 
     """
-    with open(fileLocation) as f:
-        ProjectJSONObject =  json.load(f)["Project"]
-        return ProjectJSONObject
+    try:
+        with open(fileLocation) as f:
+            JSON_Data = json.load(f)
+            ValidateJSON(JSON_Data)
+
+            ProjectJSONObject =  JSON_Data["Project"]
+            return ProjectJSONObject
+
+    except IOError:                     # Failed to read JSON file
+        ConsoleLog.error("JSON Project Read", "Unable to read JSON file in at [" + fileLocation + "]")
+        if createNewProjectOnFail:
+            tabID = GenerateID()
+            ProjectJSONObject = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
+            return ProjectJSONObject
+        else:
+            return None
+    except exceptions.ValidationError:  # JSON Data formatting is invalid
+        ConsoleLog.error("JSON Project Read", "Invalid JSON file at [" + fileLocation + "]")
+        if createNewProjectOnFail:
+            tabID = GenerateID()
+            ProjectJSONObject = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"]
+            return ProjectJSONObject
+        else:
+            return None
 
 def GetProjectName(JSONObject):
     """Get and return the project name"""
@@ -63,31 +86,39 @@ def LoadNodes(JSONObj):
         nodeDict[node["nodeID"]] = node
     return nodeDict
 
+def CreateCIData(nodeID: str, itemPos: QPointF, itemScale:float):
+    """Creates data for a new CI (CanvasItem)
 
-def CreateImageNode(imagePath, nodeName = "Image_Node"):
-    if path.exists(imagePath):
-        node = {
-            "nodeType": nodeName,
-            "nodeName": "Image",
-            "nodeID": GenerateID(),
-            "creationTime": time(),
-            "imagePath": imagePath
-        }
-        return node
+    Args:
+        nodeID (str): ID of the new CanvasItem
+        itemPos (QPointF): position for the new Canvas Item to be set
+        itemScale (float): scale for the new canvasItem
 
-    else:
-        print("CreateImageNode: Invalid Path")
-        raise Exception("CreateImageNode: Invalid Path")
-
-def CreateCanvasItem(nodeID: str, itemPos: QPointF, itemScale:float):
+    Returns:
+        Dict: returns a dictionary of nodeID, itemPos, and itemScale 
+    """
     canvasItem = {
+        "canvasItemID": GenerateID(),
         "nodeID": nodeID,
         "itemPos": [itemPos.x(), itemPos.y()],
         "itemScale": itemScale
     }
     return canvasItem
 
-def CreateTabItem(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500], viewportZoom = 1, tabColor = defaultAccentColor):
+def CreateTabData(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500], viewportZoom = 1, tabColor = defaultAccentColor):
+    """Creates data for a new Tab
+
+    Args:
+        tabName (str): name of the new tab
+        tabID (str): ID of the new tab
+        canvasItems (_type_): List of CanvasItems included in tab 
+        viewportPos (list, optional): Starting viewport pos. Defaults to [2500,2500].
+        viewportZoom (int, optional): Initial zoom. Defaults to 1.
+        tabColor (_type_, optional): Initial accent color_. Defaults to defaultAccentColor.
+
+    Returns:
+        dict: returns a dictionary of tabName, tabID, viewportPos,  viewportZoom, tabColor, and canvasItems
+    """
     tab = {
         "tabName": tabName,
         "tabID": tabID,
@@ -97,3 +128,103 @@ def CreateTabItem(tabName: str, tabID:str, canvasItems, viewportPos = [2500,2500
         "canvasItems": canvasItems
     }
     return tab
+
+
+def CreateImageData(imagePath, nodeName = "Image_Node"):
+    """Create data for a new image
+
+    Args:
+        imagePath (_type_): path to the image
+        nodeName (str, optional): name of the node. Defaults to "Image_Node".
+
+    Raises:
+        Exception: If the path does not exist, it will not create the data.
+
+    Returns:
+        dict: returns a dictionary of nodeType, nodeName, nodeID,  creationTime, and imagePath
+    """
+    if path.exists(imagePath):
+        node = {
+            "nodeType": "Image_Node",
+            "nodeName": nodeName,
+            "nodeID": GenerateID(),
+            "creationTime": round(time()),
+            "canvasItemReferences": [],
+            "imagePath": imagePath
+        }
+        return node
+
+    else:
+        print("CreateImageNode: Invalid Path")
+        raise Exception("CreateImageNode: Invalid Path")
+
+def CreateTextData(text, nodeName = "Text_Node"):
+    """Create data for a new Text Item
+
+    Args:
+        text (str): text that will be displayed
+        nodeName (str, optional): name of the node. Defaults to "Text_Node".
+
+    Returns:
+        dict: returns a dictionary of nodeType, nodeName, nodeID,  creationTime, and nodeText
+    """
+    node = {
+        "nodeType": "Text_Node",
+        "nodeName": nodeName,
+        "nodeID": GenerateID(),
+        "creationTime": round(time()),
+        "canvasItemReferences": [],
+        "nodeText": text
+    }
+    return node
+
+
+def NewProjectData(projectName, selectedTab, canvasSize, tabs, nodes):
+    newJSON = {
+        "Project":{
+            "projectName": projectName,
+            "selectedTab": selectedTab,
+            "canvasSize": canvasSize,
+            "tabs": tabs,
+            "nodes": nodes
+        }
+    }
+    return newJSON
+
+# ----- Save JSON -----
+def SaveJSON(JSON_DATA, saveLocation = None):
+    newJSON = {
+        "Project": JSON_DATA
+    }
+    print("Save data to: " + saveLocation)
+    try: 
+        f = open(saveLocation, "w+")
+        f.write(json.dumps(newJSON, indent=4))
+        f.close()
+    except:
+        ConsoleLog.error("Error Reading JSON", "Unable to read JSON file at " + saveLocation + ".")
+
+
+# ----- Validate JSON -----
+def ValidateJSON(JSON_DATA):
+    schema = {
+        "type":"object",
+        "properties":{           
+            "projectName": {"type":"string"},
+            "selectedTab": {"type": "string"},
+            "canvasSize": {"type": "array"},
+            "tabs": {"type": "array"},
+            "nodes": {"type": "array"}            
+        },
+        "required":["projectName","selectedTab","canvasSize","tabs","nodes"]
+    }
+    projectSchema = {
+        "type": "object",
+        "properties":{
+            "Project":{"type": "object"}
+        },
+        "required":["Project"]
+    }
+
+    validate(JSON_DATA, projectSchema)
+    validate(JSON_DATA["Project"], schema)

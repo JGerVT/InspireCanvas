@@ -31,6 +31,7 @@ class SelectionHighlight(QGraphicsWidget):
         self.cornerButtons = {"topLeft": QRect(), "topRight": QRect(),"bottomLeft": QRect(), "bottomRight": QRect()} # QRects for each corner to check if mouse is under.
         self.itemPadding: float = cornerResizeButtonRadius * 2 
         self.itemRect = QRectF()    # Size of the inner itemRect. Provides padding, so corner resize circular buttons do are not painted outside of self
+        self.canDrag = False
 
         self.initialSize = self.size()
 
@@ -41,11 +42,11 @@ class SelectionHighlight(QGraphicsWidget):
 
     def SetRect(self, rect:QRectF):
         """Sets the rect, as well as padding wo allow for corner resize buttons."""
-        tempPadding = self.itemPadding/self.MainCanvas.GetZoomScale() # Divide by Zoom scale to ensure that it's always within the bounds
-        self.itemRect = QRectF(tempPadding, tempPadding, rect.width(), rect.height())
-        self.setGeometry(QRectF(rect.x() - tempPadding, rect.y() - tempPadding, rect.width() + tempPadding * 2, rect.height() + tempPadding * 2))
+        padding = cornerResizeButtonRadius / self.MainCanvas.GetZoomScale()
+        self.setGeometry(rect + QMarginsF(padding,padding,padding,padding))
+        self.itemRect = QRectF(padding, padding, rect.width(), rect.height())
 
-        # Update drawing to screen
+        # # Update drawing to screen
         self.SetCornerButtons()
         self.update()
 
@@ -57,12 +58,14 @@ class SelectionHighlight(QGraphicsWidget):
         """
         if selectedItems == []: # Hide self if no items selected.
             self.hide()
-        else:
+        elif not self.isVisible():
             self.show()
 
         rect = self.MainCanvas.selectedItemGroup.sceneBoundingRect()
         self.SetRect(rect)
 
+    def SetCanDrag(self, canDrag):
+        self.canDrag = canDrag
 
     def isHandleUnderMouse(self, eventPos):
         for handle in self.cornerButtons:
@@ -98,8 +101,6 @@ class SelectionHighlight(QGraphicsWidget):
         painter.drawEllipse(self.itemRect.bottomLeft(),   tempCornerSize, tempCornerSize)
         painter.drawEllipse(self.itemRect.bottomRight(),  tempCornerSize, tempCornerSize)
 
-
-
         painter.restore()
     
         return super().paint(painter, option, widget)
@@ -107,16 +108,13 @@ class SelectionHighlight(QGraphicsWidget):
     def FormatCornerButton(self, point: QPoint):
         """This function formats the qpoint to return a QRect of the corner button"""
         tempCornerSize = cornerResizeButtonRadius / self.MainCanvas.GetZoomScale()
-        return QRectF(point - QPoint(tempCornerSize, tempCornerSize),   # -QPoint() is offset, since drawEllipse draws around the QPoint
-               QSize(tempCornerSize * 2, tempCornerSize * 2))           # QSize() * 2, because the tempCornerSize is radius, not diameter.
-
+        return QRectF(point.x() - tempCornerSize, point.y() - tempCornerSize, tempCornerSize * 2, tempCornerSize * 2)
 
     # Events
     def mousePressEvent(self, event) -> None:
         self.initialDragPos = event.scenePos()
 
         self.initialSize = self.sceneBoundingRect().size()
-
 
         # Checks if corner re-size drag button is clicked. If button rect contains mouse position.
         if event.modifiers() and Qt.ShiftModifier and (self.cornerButtons["topLeft"].contains(event.pos()) or self.cornerButtons["bottomLeft"].contains(event.pos())):
@@ -135,6 +133,8 @@ class SelectionHighlight(QGraphicsWidget):
         if self.currentDrag != None:    # Don't pass mouse event if mouse event is handled
             return None         
             
+        self.update()
+
         return super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -146,7 +146,7 @@ class SelectionHighlight(QGraphicsWidget):
         newSize = self.initialSize.width() + deltaDragPos.x()
         newScale = newSize / self.initialSize.width()
         
-        if self.currentDrag != None:
+        if self.currentDrag != None and self.canDrag:
             self.MainCanvas.selectedItemGroup.CalculateScale(deltaDragPos, self.currentDrag)
 
         return super().mouseMoveEvent(event)

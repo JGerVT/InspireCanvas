@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 import os
+import sys
 
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -30,3 +31,11 @@ def GenerateID():
 def GetFileType(string:str):
     split_tup = os.path.splitext(string)
     return  split_tup[1]
+
+
+
+def openFile(file):
+    if sys.platform == 'linux2':
+        subprocess.call(["xdg-open", file])
+    else:
+        os.startfile(file)

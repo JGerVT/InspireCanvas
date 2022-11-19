@@ -1,5 +1,5 @@
 """
-Description: This python file contains the QGraphicsView and QGraphicsScene that display the canvas items. 
+Description:    This python file contains the QGraphicsView and QGraphicsScene that display the canvas items. 
 
 Date Created: 9/27/22 
 Date Updated: 10/15/22
@@ -7,8 +7,6 @@ Date Updated: 10/15/22
 
 # --Imports--
 import traceback
-
-from sympy import false
 
 from Settings.settings import *
 
@@ -18,11 +16,12 @@ from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
 from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
+from UI_Components.ContextMenu.contextMenu import *
 
 
 class MainCanvas(QGraphicsView):
     IsCanvasEmpty = Signal(bool)
-    def __init__(self, parent, nodeHashTable, canvasSize = [5000, 5000]) -> None:
+    def __init__(self, parent) -> None:
         """This class provides the (QGraphicsView) canvas where all CanvasItems will be placed.
 
         Args:
@@ -48,36 +47,43 @@ class MainCanvas(QGraphicsView):
 
         # _____ References _____
         self.MainContent = parent
-        self.nodeHashTable = nodeHashTable
+        self.nodeHashTable = None
         self.tabData = None
 
         # _____ Properties _____
-        self.canvasSize = canvasSize
+        self.canvasSize = None
         self.canvasItems = []
         self.canvasItemData = [] #Copy of canvas item data. Used for persistent data
+
+        # Temporary Copy variable. When CanvasItems are copied, they are set here. 
+        self.copyCanvasItemData = None
 
         # _____ Rubber Band Selection _____
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
 
         # _____ Main Scene _____
-        self.mainScene = MainScene(0,0, self.canvasSize[0], self.canvasSize[1], self)   # Set main Scene
+        self.mainScene = None   # Main scene is set in SetCanvasData
         self.setScene(self.mainScene)
 
         # _____ Highlight Selection _____
         self.selectionHighlight = SelectionHighlight(self)
-        self.mainScene.addItem(self.selectionHighlight)
 
         # _____ Item Group For Selection _____
         self.selectedItemGroup = ItemGroup(mainView=self)
         self.selectedItemGroup.setZValue(9998)
-        self.mainScene.addItem(self.selectedItemGroup)
 
         # _____ Signals _____
         self.IsCanvasEmpty.connect(self.MainContent.setCanvasEmpty)
 
+    def SetCanvasData(self, nodeHashTable, canvasSize):
+        self.canvasSize = canvasSize
+        self.nodeHashTable = nodeHashTable
+        self.mainScene = MainScene(0,0, canvasSize[0], canvasSize[1], self)   # Set main Scene
+        self.setScene(self.mainScene)
+        self.mainScene.addItem(self.selectionHighlight)
+        self.mainScene.addItem(self.selectedItemGroup)
 
 
-    # _________ ADD/REMOVE CanvasItems _________
     def TabSelected(self, tabData):
         """Set canvas items on the canvas to a list of canvasItems.
         This removes all pre-existing canvas items on the canvas.
@@ -93,34 +99,26 @@ class MainCanvas(QGraphicsView):
         self.horizontalScrollBar().setValue(tabData["viewportPos"][0])
         self.verticalScrollBar().setValue(tabData["viewportPos"][1])
 
-        canvasItems = tabData["canvasItems"]
+        self.canvasItemData = tabData["canvasItems"]
 
-        self.canvasItemData = canvasItems
         self.RemoveAllSelected()
 
         for item in self.mainScene.items(): # Only remove CanvasItems
-            if issubclass(type(item), CanvasItem):      #! Remove
+            if issubclass(type(item), CanvasItem): 
                 self.mainScene.removeItem(item)
 
         self.canvasItems.clear()    # Remove all items on canvas
 
-        self.SetCanvasItemCount()
+        for canvasItemData in self.canvasItemData:          # Add all canvas items from canvasItems to the canvas. 
+            self.InsertCanvasItem(canvasItemData)
 
-        for canvasItem in canvasItems:          # Add all canvas items from canvasItems to the canvas. 
-            self.AddCanvasItem(canvasItem)
-
+        self.SetCanvasItemCount()   # This is needed if no CanvasItems are present, otherwise it will not show the message
         self.StoreZoomAmt()
-
-    def AddNodeToDatabase(self, nodeData: dict):
-        """Add Node Data to database
-
-        Args:
-            nodeData (dict): data that will be added to database
-        """
-        self.nodeHashTable[nodeData["nodeID"]] = nodeData
-
-    def AddCanvasItem(self, canvasItemData):
-        """Add CanvasItem to the canvas
+        
+    # ----- ADD, REMOVE, and Copy CanvasItems -----
+    def InsertCanvasItem(self, canvasItemData):
+        """ Add CanvasItem to the canvas. This will check which type of CanvasItem is passed and create the correct CanvasItem
+            On Initialization, this is called from self.TabSelected
 
         Args:
             CanvasItemData (dict): Data for CanvasItem
@@ -128,23 +126,43 @@ class MainCanvas(QGraphicsView):
         Returns:
             (ImageCanvasItem): returns created CanvasItem
         """
-        nodeType = self.nodeHashTable[canvasItemData["nodeID"]]["nodeType"]
+        try:    # IF item is found, get it's data, else raise error
+            nodeData = self.nodeHashTable[canvasItemData["nodeID"]]
+        except:
+            ConsoleLog.error("Item [" + canvasItemData["nodeID"] +"] not found in database.")
+            return None
 
-        if nodeType == "Image_Node":
+        newCanvasItem = None
+        if nodeData["nodeType"] == "Image_Node":
             newCanvasItem = ImageCanvasItem(self, canvasItemData)
-        elif nodeType == "Text_Node":
+        elif nodeData["nodeType"] == "Text_Node":
             newCanvasItem = TextCanvasItem(self, canvasItemData)
+        else:   # If type is not valid, do not add to database.
+            return None
 
-        self.mainScene.addItem(newCanvasItem)
-        self.canvasItems.append(newCanvasItem)
+        self.SetReference(canvasItemData["nodeID"], canvasItemData["canvasItemID"])  # Update Reference
+
+        return self.AddCanvasItemToScene(newCanvasItem)
+
+    def AddCanvasItemToScene(self, canvasItem):
+        """This function adds the passed CanvasItem to the scene. 
+
+        Args:
+            canvasItem (CanvasItem): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        self.mainScene.addItem(canvasItem)
+        self.canvasItems.append(canvasItem)
+
         self.SetCanvasItemCount()
-        
         self.SetZValues()
 
-        return newCanvasItem
-
-
-    def RemoveCanvasItem(self, canvasItem: CanvasItem):
+        return canvasItem
+    
+    def RemoveCanvasItem(self, canvasItem: CanvasItem, removeNodeData = True):
         """Remove CanvasItem from Canvas
 
         Args:
@@ -155,12 +173,170 @@ class MainCanvas(QGraphicsView):
         self.RemoveSelected(canvasItem)
 
         self.tabData["canvasItems"].pop(self.tabData["canvasItems"].index(canvasItem.canvasItemData))   # Remove data from canvasItem Database
-        del self.nodeHashTable[canvasItem.nodeID]
+
+        if self.RemoveReference(canvasItem.canvasItemData["nodeID"], canvasItem.canvasItemData["canvasItemID"]) == 0:   # If there are no more references to the item in the database, delete from database
+            del self.nodeHashTable[canvasItem.nodeID]
 
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
 
+    def DuplicateCanvasItem(self, nodeID:int, newPos:QPointF = None, scale:int = 1):
+        """This function will duplicate a given CanvasItem data at the desired location. 
 
+        Args:
+            nodeID (int): _description_
+            newPos (QPointF, optional): _description_. Defaults to None.
+            scale (int, optional): New location of the canvas Item. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        newData = CreateCIData(nodeID, newPos, scale)
+        self.canvasItemData.append(newData)
+        canvasItem = self.InsertCanvasItem(newData)
+        
+        return canvasItem
+
+    # Insert New CanvasItem
+    #   New Image CanvasItem
+    def NewImageCanvasItem(self, imagePath: str, position: QPointF, scale = 1):
+        """Create a new Image Canvas Item
+
+        Args:
+            imagePath (str): path to the image
+
+        Returns:
+            CanvasItem: Returns the new Canvas Item
+        """
+        imageNodeData = CreateImageData(imagePath)
+        canvasItemData = CreateCIData(imageNodeData["nodeID"], position, scale)
+        imageNodeData["canvasItemReferences"].append(canvasItemData["canvasItemID"])
+
+        self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
+        self.InsertCanvasItem(canvasItemData)   # Insert text node
+    #   New Text CanvasItem
+    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1):
+        """ Create a new Text Canvas Item
+
+        Args:
+            text (str): Text to be set to the Text CanvasItem
+            position (QPointF): initial position of the CanvasItem
+            scale (int, optional): scale of the TextCanvasItem. Defaults to 1.
+
+        Returns:
+            _type_: _description_
+        """
+        textNodeData = CreateTextData(text)
+        newID = textNodeData["nodeID"]
+        canvasItemData = CreateCIData(newID, position, scale)
+
+        self.SetAllData(canvasItemData, textNodeData)   # Set data to databases
+
+        canvasItem = self.InsertCanvasItem(canvasItemData)   # Insert text node
+
+        return canvasItem
+    
+    # ________________________________________
+    
+    # ----- Copy and Paste -----
+    def CopySelection(self):
+        self.copyCanvasItemData = []
+        for item in self.selectedItemGroup.childItems(): 
+            offsetPos = item.scenePos() - self.selectedItemGroup.sceneBoundingRect().topLeft()
+
+            nodeID = item.nodeID
+            scale = item.GetScale()
+            self.copyCanvasItemData.append({"offsetPos":offsetPos,
+                                            "containerScenePos": self.selectedItemGroup.sceneBoundingRect().topLeft(),
+                                            "nodeID": nodeID,
+                                            "scale": scale})
+
+    def PasteSelection(self, clickPos:QPointF):
+        self.RemoveAllSelected()
+        for item in self.copyCanvasItemData:
+            newLocation = clickPos + item["offsetPos"]
+
+            item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
+            self.AddSelected(item)
+
+    # ________________________________________
+
+    # _______________ Utility _______________
+    # ----- Set ------
+    def SetAllData(self, canvasItemData, nodeData):
+        """Sets data for both the canvasItem and nodeData
+
+        Args:
+            canvasItemData (_type_): canvasItemData
+            nodeData (_type_): node Data
+        """
+        self.SetCanvasItemDatabase(canvasItemData)
+        self.SetNodeDatabase(nodeData)
+
+    def SetCanvasItemDatabase(self, canvasItemData):
+        """ Add CanvasItem Data to database
+            This will add the Image, Text, or File node data to the Node database.
+
+        Args:
+            nodeData (dict): data that will be added to database
+        """
+        self.canvasItemData.append(canvasItemData)
+
+    def SetNodeDatabase(self, nodeData):
+        """ Add Node Data to database
+            This will add the Image, Text, or File node data to the Node database.
+
+        Args:
+            nodeData (dict): data that will be added to database
+        """
+        self.nodeHashTable[nodeData["nodeID"]] = nodeData
+
+    def SetZValues(self):
+        """Sets the z-index for every CanvasItem in the self.canvasItems list
+        """
+        for node in self.canvasItems:
+            node.setZValue(self.canvasItems.index(node))
+    
+    # Manage Node References
+    def SetReference(self, nodeID, canvasItemID):
+        """Add CanvasItem reference to the node in the node database"""
+        if canvasItemID not in self.nodeHashTable[nodeID]["canvasItemReferences"]:
+            self.nodeHashTable[nodeID]["canvasItemReferences"].append(canvasItemID)
+
+
+    def RemoveReference(self, nodeID, canvasItemID):
+        del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
+
+        if canvasItemID in self.nodeHashTable[nodeID]["canvasItemReferences"]:
+            del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
+
+        print(self.nodeHashTable[nodeID]["canvasItemReferences"])
+
+        return len(self.nodeHashTable[nodeID]["canvasItemReferences"])
+
+    def SaveJSON(self, saveLocation = None):
+        self.MainContent.UpdateJSONData()
+        SaveJSON(self.MainContent.JSONData, saveLocation) 
+
+    # ---------------
+
+    # ----- Get -----
+    def GetNodeData(self, nodeID:str):
+        """Gets the data from the nodeHashTable (database of nodes)"""
+        return self.nodeHashTable[nodeID]
+
+    def GetCanvasItemsFromList(self, list):
+        tempList = []
+        for item in list:
+            if issubclass(type(item), CanvasItem):
+                tempList.append(item)
+        return tempList
+
+    def GetZoomScale(self):
+        return self.transform().m11()
+    # ---------------
+
+    # ----- Other -----
     def SetCanvasItemCount(self):
         """Used to update if prompt to add CanvasItem appears or not in mainContent.py"""
 
@@ -168,28 +344,7 @@ class MainCanvas(QGraphicsView):
             self.IsCanvasEmpty.emit(True)
         else:
             self.IsCanvasEmpty.emit(False)    
-    # ________________________________________
-
-
-    # _______________ Utility _______________
-    def NewCanvasItemData(self, canvasItemData, nodeData):
-        self.canvasItemData.append(canvasItemData)
-        self.nodeHashTable[nodeData["nodeID"]] = nodeData
-
-    def GetNodeData(self, nodeID:str):
-        """Gets the data from the nodeHashTable (database of nodes)"""
-        return self.nodeHashTable[nodeID]
-
-    def SetNodeData(self, nodeID: str, nodeData:dict):
-        """Sets the node data in nodeHashTable (database of nodes)
-        
-        Args:
-            nodeID: id of node being set
-            nodeData: data that is being set to the nodeID
-        """
-        self.nodeHashTable[nodeID] = nodeData
-
-
+   
     def CanvasItemToFront(self, canvasItem):
         """Brings the CanvasItem to the front of the canvas
         Called when CanvasItem is selected 
@@ -198,16 +353,11 @@ class MainCanvas(QGraphicsView):
             canvasItem (CanvasItem): The CanvasItem that will be moved to the front.
         """
         self.canvasItems.append(self.canvasItems.pop(self.canvasItems.index(canvasItem)))
-        self.canvasItemData.append(self.canvasItemData.pop(self.canvasItemData.index(canvasItem.canvasItemData))) # Move canvasItemData to front of list, so it persists across sessions
+        self.canvasItemData.append(self.canvasItemData.pop(self.canvasItemData.index(canvasItem.canvasItemData)))
+
         self.SetZValues()
 
-    def SetZValues(self):
-        """Sets the z-index for every CanvasItem in the self.canvasItems list
-        """
-        for node in self.canvasItems:
-            node.setZValue(self.canvasItems.index(node))
-
-    def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = false):
+    def isItemAtPos(self, pos:QPoint, checkSelectionHighlight = False):
         """Check if an item is under the mouse on the canvas.
         
         Arg:
@@ -222,19 +372,20 @@ class MainCanvas(QGraphicsView):
                 itemAtPos = True
         return itemAtPos
 
-    def GetCanvasItemsFromList(self, list):
-        tempList = []
-        for item in list:
-            if issubclass(type(item), CanvasItem):
-                tempList.append(item)
-        return tempList
-
     def SetSelectionHighlightPos(self):
         self.selectionHighlight.SelectionChanged(self.selectedItemGroup.childItems())
+    
+    def GetVisibleScreenRect(self):
+        """ Returns a QRectF of the visible area in the scene
+            From: https://stackoverflow.com/a/17924010
+        """
+        viewport_rect = QRect(0, 0, self.viewport().width(), self.viewport().height())
+        visible_scene_rect = QRectF(self.mapToScene(viewport_rect).boundingRect())
 
-    def GetZoomScale(self):
-        return self.transform().m11()
+        return visible_scene_rect
+    # ---------------
 
+    # ----- Zoom -----
     def StoreZoomAmt(self):
         zoomAmt = self.GetZoomScale()
         self.tabData["viewportZoom"] = zoomAmt
@@ -273,6 +424,8 @@ class MainCanvas(QGraphicsView):
             self.horizontalScrollBar().setValue(prevPos.x())
             self.verticalScrollBar().setValue(prevPos.y())
 
+        self.SetSelectionHighlightPos()
+
         # Save changes        
         self.StoreZoomAmt()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
@@ -281,7 +434,6 @@ class MainCanvas(QGraphicsView):
 
     # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
         """This function ensures that the canvas item stays within the bounds of the scene."""
-        # pass
 
     # _______________ Manage Selected Canvas Nodes _______________
     def SetSelected(self, canvasItem):
@@ -301,7 +453,7 @@ class MainCanvas(QGraphicsView):
         """
         self.RemoveAllSelected()
         for item in canvasItems:
-            item.AddSelected(True)
+            self.AddSelected(item)
 
     def AddSelected(self, canvasItem):
         """Add node to selection. Does not remove previous selection
@@ -315,6 +467,7 @@ class MainCanvas(QGraphicsView):
         if canvasItem not in self.selectedItemGroup.childItems():  # Make sure item not already selected
             self.selectedItemGroup.addToGroup(canvasItem)
 
+        canvasItem.SetSelected(True)
         self.SetSelectionHighlightPos()
 
     def RemoveSelected(self, canvasItem):
@@ -326,15 +479,21 @@ class MainCanvas(QGraphicsView):
         if canvasItem in self.selectedItemGroup.childItems():  
             self.selectedItemGroup.removeFromGroup(canvasItem)      
 
+        canvasItem.SetSelected(False)
         self.SetSelectionHighlightPos()
         
-
     def RemoveAllSelected(self):
         """Removes all selected canvasItems from selectedItemGroup"""
         for item in self.selectedItemGroup.childItems():
-            item.SetSelected(False)
+            self.RemoveSelected(item)
+            # item.SetSelected(False)
 
         self.selectedItemGroup.resetTransform()
+
+    def GetSelected(self):
+        """Get all selected nodes"""
+        return self.selectedItemGroup.childItems()
+
 
     #_________ Events _________
     def mousePressEvent(self, event):   
@@ -343,6 +502,7 @@ class MainCanvas(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
         elif event.button() == Qt.MouseButton.RightButton:
+            CanvasItemContextMenu(self, event)
             return
 
         elif event.button() == Qt.MouseButton.LeftButton:
@@ -388,7 +548,6 @@ class MainCanvas(QGraphicsView):
 
         return super().mouseReleaseEvent(event)
 
-
     def wheelEvent(self, event):
         """CTRL + Mousewheel: Zoom in and out, limited by settings.py ( minMaxZoom[] ) 
         
@@ -399,14 +558,25 @@ class MainCanvas(QGraphicsView):
         else:
             self.AddSubtractZoom(.1)
 
-
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
             self.mainScene.keyPressEvent(event)
-            return True
-        
-        return super().keyPressEvent(event)
+            return True        
 
+        if event.matches(QKeySequence.Copy):                                            # Copy selected CanvasItems
+            self.CopySelection()       
+        elif event.matches(QKeySequence.Paste) and self.copyCanvasItemData != None:     # Paste selected CanvasItems
+            cursorScenePos = self.mapToScene(self.mapFromGlobal(QCursor().pos()))
+            if self.GetVisibleScreenRect().contains(cursorScenePos):
+                self.PasteSelection(cursorScenePos)
+            else:
+                self.PasteSelection(self.copyCanvasItemData[0]["containerScenePos"])
+        elif event.matches(QKeySequence.Cut):                                           # Cut selected CanvasItems
+            self.CopySelection()
+            for item in self.GetSelected():
+                self.RemoveCanvasItem(item, False)
+
+        return super().keyPressEvent(event)
     # ________________________________________
 
 
@@ -444,6 +614,21 @@ class MainScene (QGraphicsScene):
             return topWidget
         return None
 
+    def GetTopWidgetAtPos(self, scenePos:QPointF):
+        """Get the top widget at the passed scenePos
+
+        Args:
+            scenePos (QPointF): position to check for widgets
+
+        Returns:
+            CanvasItem: Top widget under mouse 
+        """
+        itemsUnderMouse = self.items(scenePos)
+        for item in itemsUnderMouse:
+            if issubclass(type(item), CanvasItem):  # Check if item is subclassed from CanvasItem.
+                return item
+        return None
+
     # ------ EVENTS ------
     def mousePressEvent(self, event) -> None:   # https://stackoverflow.com/a/3839127
         """Mouse clicked on scene"""
@@ -451,44 +636,33 @@ class MainScene (QGraphicsScene):
         self.prevPos = event.scenePos()
         self.canDrag = True 
 
-        self.pItemUnderMouse = self.items(event.scenePos()) # Detects if theres an item under the mouse click position
-        self.topWidgetUnderMouse:CanvasItem = None
+        # Get top widget
+        self.topWidgetUnderMouse = self.GetTopWidgetAtPos(event.scenePos()) 
 
         # Set initial data for checking delta changes
         self.mainView.selectedItemGroup.SetInitialPos()
         self.mainView.selectedItemGroup.SetInitialSceneBoundingRect()
         self.mainView.selectedItemGroup.SetInitialSceneRectALL()
 
+        #* No Item under mouse, but SelectionHighlight corner IS under mouse
+        if self.mainView.selectionHighlight.isHandleUnderMouse(event.scenePos()):
+            self.canDrag = False
+            self.mainView.selectionHighlight.SetCanDrag(True)
+            return super().mousePressEvent(event)   
 
-        # Get top widget
-        for item in self.pItemUnderMouse:
-            if issubclass(type(item), CanvasItem):  # Check if item is subclassed from CanvasItem.
-                self.topWidgetUnderMouse = item
-                break
-
-
-
-        # If No item under mouse and and corner handle is under mouse, pass to SelectionHighlight
-        if self.pItemUnderMouse != [] and type(self.pItemUnderMouse[0]) == SelectionHighlight:
-            if self.pItemUnderMouse[0].isHandleUnderMouse(event.scenePos()):
-                self.canDrag = False
-                return super().mousePressEvent(event)   
-
-        # No item under mouse click, unselect all items. (i.e. when the user clicks on the canvas)
-        if (not self.topWidgetUnderMouse):  
+        #* No Item or SelectionHighlight under mouse on click (i.e. when the user clicks on the canvas) Unselect all items
+        elif self.topWidgetUnderMouse == None:
             self.mainView.RemoveAllSelected()
             self.canDrag = False
-            return  # Click event has been handled
+            return 
 
-
-
-        # Item is under mouse click.
-        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected() and self.topWidgetUnderMouse.flags() and QGraphicsItem.ItemIsSelectable):
+        #* Item under mouse on click
+        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected()):
             if event.modifiers() and Qt.Modifier.SHIFT: # If Shift held, add item to selection
-                self.topWidgetUnderMouse.AddSelected(True)
+                self.mainView.AddSelected(self.topWidgetUnderMouse)
                 self.canDrag = False
             else:                                       # If Shift is not held, set as only selection.
-                self.topWidgetUnderMouse.SetSelected(True)
+                self.mainView.SetSelected(self.topWidgetUnderMouse)
 
         # If any items are not set to canDrag, don't allow the user to drag the items
         for item in self.mainView.selectedItemGroup.childItems():
@@ -509,6 +683,7 @@ class MainScene (QGraphicsScene):
 
     def mouseReleaseEvent(self, event) -> None:
         self.mainView.selectedItemGroup.SetItemData()
+        self.mainView.selectionHighlight.SetCanDrag(False)
         return super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event) -> None:
@@ -516,16 +691,23 @@ class MainScene (QGraphicsScene):
         if type(self.topWidgetUnderMouse) == TextCanvasItem:
             self.topWidgetUnderMouse.setIsEditable(True)
 
-        try:
-            # Open File
-            pass
-        except:
-            pass
-        return
+        elif type(self.topWidgetUnderMouse) == ImageCanvasItem and self.onlyOneCanvasItemSelected() != None:
+            try:
+                # print(self.topWidgetUnderMouse.imagePath)
+                openFile(self.topWidgetUnderMouse.imagePath)
+                # Open File
+                pass
+            except:
+                pass
+            return
         # return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event) -> None:
-        textItem = self.onlyOneCanvasItemSelected()
+        try:
+            textItem = self.onlyOneCanvasItemSelected()
+        except:
+            pass
+
         if event.key() == Qt.Key.Key_Delete:                    # If Delete key is pressed, delete selected items
             if type(textItem) != TextCanvasItem or type(textItem) == TextCanvasItem and not textItem.isEditable():# If there is no text item or the text item is not editable, delete. 
                 for item in self.mainView.selectedItemGroup.childItems():
@@ -558,13 +740,7 @@ class MainScene (QGraphicsScene):
                     urlTemp = url.toLocalFile()
                     
                     if urlType in imageFileTypes: # Is an image file type.
-                        nodeData = CreateImageNode(url.toLocalFile())   # Do this first to ensure that the file exists.
-                        canvasItemData = CreateCanvasItem(nodeData["nodeID"], initPosition, 1)
-
-                        self.mainView.AddNodeToDatabase(nodeData)
-                        self.mainView.AddCanvasItem(canvasItemData)
-                        self.mainView.NewCanvasItemData(canvasItemData, nodeData)
-
+                        self.mainView.NewImageCanvasItem(url.toLocalFile(), initPosition)
                         initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
 
                     else: # Is a file type

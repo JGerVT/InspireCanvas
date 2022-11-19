@@ -19,14 +19,6 @@ class ImageCanvasItem(CanvasItem):
         self.setImage(self.imagePath)
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
-
-        # If image is bigger than canvas, set image to smaller, default size.
-        if not self.isWithinBounds(): #! Fix this, so even on resize it will be within bounds
-            if self.isLandscape(self.imageSize):
-                self.setScale(defaultImageSize.width()/self.imageSize.width())
-            else:
-                self.setScale(defaultImageSize.height()/self.imageSize.height())
-
     def setImage(self, path):
         """Sets the image to self.pixmapItem"""
         image = self.loadImage(path)
