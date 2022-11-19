@@ -380,7 +380,7 @@ class Tab(QWidget):
 
         # Label of Tab
         self.label = TabText(name, self)
-        self.label.setStyleSheet("color: white; border-color: transparent; background-color: transparent; margin-top: 3px;")
+        self.label.setStyleSheet("color: white; border-color: transparent; background-color: transparent; margin-top: 0px;")
         self.label.setFont(font)
 
         # Delete Button
@@ -408,7 +408,7 @@ class Tab(QWidget):
         #Layout
         hBoxLayout = QHBoxLayout(self)
         LayoutRemoveSpacing(hBoxLayout) # Remove layout spacing
-        hBoxLayout.setContentsMargins(30,0,5,0)
+        hBoxLayout.setContentsMargins(30,4,5,0)
         hBoxLayout.addWidget(self.label)
         hBoxLayout.addWidget(self.deleteButton)
 
