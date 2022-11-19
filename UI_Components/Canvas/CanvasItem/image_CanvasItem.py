@@ -10,27 +10,14 @@ class ImageCanvasItem(CanvasItem):
         super().__init__(parent, canvasItemData)
 
         # Properties/Data
-        self.nodeData = self.mainCanvas.GetNodeData(self.nodeID) # Get Data by checking database with id
-        self.nodeType = self.nodeData["nodeType"]
-        self.nodeName = self.nodeData["nodeName"]
-        self.creationTime = self.nodeData["creationTime"]
         self.imagePath = self.nodeData["imagePath"]
         self.imageSize = QSize()
 
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
-        # self.pixmapItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
         # Initiation 
         self.setImage(self.imagePath)
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
-
-
-        # If image is bigger than canvas, set image to smaller, default size.
-        if not self.isWithinBounds(): #! Fix this, so even on resize it will be within bounds
-            if self.isLandscape(self.imageSize):
-                self.setScale(defaultImageSize.width()/self.imageSize.width())
-            else:
-                self.setScale(defaultImageSize.height()/self.imageSize.height())
 
     def setImage(self, path):
         """Sets the image to self.pixmapItem"""

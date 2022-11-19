@@ -19,6 +19,9 @@ class ItemGroup(QGraphicsItemGroup):
         """
         super().__init__(parent)
 
+        # Set Attributes
+        self.setHandlesChildEvents(False)   # This allows children to accept mouse events. Necessary for Text Item 
+
         # References
         self.mainView = mainView
         
@@ -32,20 +35,7 @@ class ItemGroup(QGraphicsItemGroup):
         Args:
             scenePos (QPointF) : The location where self should be set.
         """
-        sceneRect = self.scene().sceneRect()        
-        prevPos = self.pos()    #! Fix this, if mouse moves fast, can have padding on corner. 
         self.setPos(scenePos)
-        sceneBoundingRect = self.sceneBoundingRect()
-
-        if sceneBoundingRect.top() < sceneRect.top():   # If items are moved outside bounds, revert to position before move happened
-            self.setY(prevPos.y())
-        if sceneBoundingRect.bottom() > sceneRect.bottom():
-            self.setY(prevPos.y())
-        if sceneBoundingRect.left() < sceneRect.left():
-            self.setX(prevPos.x())
-        if sceneBoundingRect.right() > sceneRect.right():
-            self.setX(prevPos.x())
-
         self.mainView.SetSelectionHighlightPos()
 
     def SetInitialPos(self):
@@ -67,7 +57,7 @@ class ItemGroup(QGraphicsItemGroup):
 
     def CalculateScale(self, delta :QPointF, cornerName: str = None):
         """Calculate the desired scale of the group"""
-        canScale = True
+        # canScale = True
 
         if cornerName == "topLeft" or cornerName == "bottomLeft":   # Invert if the left corner is used.
             delta = -delta
@@ -78,14 +68,7 @@ class ItemGroup(QGraphicsItemGroup):
 
         desiredScale = (self.initialSceneRect.width() + delta.x()) / self.boundingRect().width()
 
-        #! Implement scaling limits
-
-        # for item in self.childItems:
-        #     print(item.nodeID, item.boundingRect().height(), item.initialScale, desiredScale, " = ", item.boundingRect().height() * item.initialScale * desiredScale)
-        #     if type(item) == CanvasItem and item.boundingRect().height() * item.initialScale * desiredScale < minimumImageSize[1]:
-        #         canScale = False
-
-        if canScale:
+        if desiredScale > 0:
             self.SetScale(desiredScale, cornerName)
 
 
@@ -98,8 +81,8 @@ class ItemGroup(QGraphicsItemGroup):
             cornerName (str) : name of the corner being dragged
         """
 
-        if not scale > .1: # Limit the scaling
-            scale = .1
+        if not scale > 0: # Limit the scaling
+            scale = 0
 
         if cornerName == "topLeft":     # Sets the pivot point based on the corner used.
             corner = self.boundingRect().bottomRight()
@@ -135,3 +118,6 @@ class ItemGroup(QGraphicsItemGroup):
         """Save data for child items. Used for persistent data between tab switches"""
         for item in self.childItems():
             item.SetData()
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        return super().mouseDoubleClickEvent(event)

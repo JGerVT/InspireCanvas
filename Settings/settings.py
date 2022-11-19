@@ -14,11 +14,10 @@ from Utility import ConsoleLog
 
 # Software Settings
 defaultAccentColor = "#23A0FF"
-DefaultJSONProjectLocation = u"Data\defaultDatabase.json"
+# JSONProjectLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
 softwareIconLocation = "Resources\inspireCanvasIcon.png" #Icon Location
 startingWindowSize = [1200, 800] # Default software size
 MaxSize = 16777215
-softwareLogLocation = "Data\softwareLog.log"
 
 #--Top Bar--
 topBarHeight = 40 # Height of Top-Bar
@@ -34,7 +33,7 @@ fontFamily = u"Segoe UI"
 
 # Canvas
 # XYDefaultSize = QSize(5000, 5000)
-minMaxZoom = [.05, 5]
+minMaxZoom = [0.01, 10]
 cornerResizeButtonRadius = 4
 minimumImageSize = [100, 100]   # pixels
 defaultImageSize = QSizeF(600, 600)   # Sets the default size of a dragged in image. This ensures that images that are too big default to a smaller size

@@ -1,7 +1,7 @@
 """ 
 Description:    This python file creates the window that the program will be set in.
                 This file is the first file of the software, which can be executed.
- 
+
 Date Created: 9/27/22 
 Date Updated: 9/28/22
 """

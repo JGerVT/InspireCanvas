@@ -30,10 +30,17 @@ class CanvasItem(QGraphicsWidget):
         self.itemPos = QPointF(canvasItemData["itemPos"][0], canvasItemData["itemPos"][1])
         self.itemScale : float = canvasItemData["itemScale"]
 
+        # Node Data
+        self.nodeData = self.mainCanvas.GetNodeData(self.nodeID) # Get Data by checking database with id
+        self.nodeType = self.nodeData["nodeType"]
+        self.nodeName = self.nodeData["nodeName"]
+        self.creationTime = self.nodeData["creationTime"]
+
         # Properties
         self.isSelected_ = False
         self.initialSceneRect = self.sceneBoundingRect()
         self.initialScale = self.GetScale()
+        self.canDrag = True
 
         self.initialPos = self.scenePos() # This is the offset used when items are moved
 
@@ -44,6 +51,8 @@ class CanvasItem(QGraphicsWidget):
         defaultSize = QSize(720,480)
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()),defaultSize))
 
+    def setCanDrag(self, canDrag):
+        self.canDrag = canDrag
 
     def setInitialPos(self, initialPos):
         self.initialPos = initialPos
@@ -69,7 +78,7 @@ class CanvasItem(QGraphicsWidget):
         painter.setRenderHint(painter.Antialiasing, True)
 
         if self.isSelected_:   # If is selected, Draw the border
-            borderWidth = 1 / self.mainCanvas.GetZoomScale() /self.initialScale
+            borderWidth = 1 / self.mainCanvas.GetZoomScale() / self.GetScale()
             painter.setPen(QPen(QBrush(defaultAccentColor), borderWidth))
             painter.drawRect(self.boundingRect())
 
@@ -79,30 +88,21 @@ class CanvasItem(QGraphicsWidget):
 
     def IsSelected(self) -> bool:
         return self.isSelected_
-        # return super().isSelected()
 
-    def SetSelected(self, selected: bool):
+    def SetSelected(self, selected: bool) -> None:
+        """Set if the widget is selected or not
+
+        Args:
+            selected (bool): Do you want to select the widget?
+        """
         self.isSelected_ = selected
-
-        if selected:
-            self.mainCanvas.SetSelected(self)
-        else:
-            self.mainCanvas.RemoveSelected(self)
-
-    def AddSelected(self, selected:bool):
-        self.isSelected_ = selected
-
-        if selected:
-            self.mainCanvas.AddSelected(self)
-        else:
-            self.mainCanvas.RemoveSelected(self)
+        self.setCanDrag(True)
 
     def itemChange(self, change, value):
         if (change == QGraphicsItem.ItemPositionChange and self.scene() or change == QGraphicsItem.ItemScenePositionHasChanged):
             self.mainCanvas.SetSelectionHighlightPos()
 
         return super().itemChange(change, value)
-
 
     def SetData(self):
         """When the user changes data, set the data in the database."""
