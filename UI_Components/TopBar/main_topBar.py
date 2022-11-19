@@ -46,17 +46,20 @@ class MainTopBar(QWidget):
 
         # Widgets in top bar
         self.hamburgerButton = HamburgerButton(self)
-        self.TabContainer = TabContainer(self, MainContent = self.MainContent)
-        self.AddTabButton = AddTabButton(self)
+        self.tabScrollbar = TabScrollbar(self, self.MainContent)
+        # self.TabContainer = TabContainer(self, MainContent = self.MainContent)
+        # self.AddTabButton = AddTabButton(self)
+
         self.WindowOptions = WindowOptions(self)
 
         # Layouts
         hLayout = QHBoxLayout(self)
         hLayout.addWidget(self.hamburgerButton)
-        hLayout.addWidget(self.TabContainer)
-        hLayout.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
-        hLayout.addWidget(self.AddTabButton)
-        hLayout.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
+        hLayout.addWidget(self.tabScrollbar)
+        # hLayout.addWidget(self.TabContainer)
+        # hLayout.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
+        # hLayout.addWidget(self.AddTabButton)
+        # hLayout.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
         hLayout.addWidget(self.WindowOptions)
         LayoutRemoveSpacing(hLayout)
 
@@ -64,7 +67,7 @@ class MainTopBar(QWidget):
 
     def SetTabs(self, tabHashTable, selectedTab):
         self.tabHashTable = tabHashTable
-        self.TabContainer.SetTabs(selectedTab)
+        self.tabScrollbar.TabContainer.SetTabs(selectedTab)
 
     def GetCopy(self):
         return self.copyTab
@@ -97,10 +100,46 @@ class HamburgerButton(QPushButton):
         print("Hamburger press")
         return super().mousePressEvent(e)
 
+class TabScrollbar(QScrollArea):
+    def __init__(self, parent, MainContent) -> None:
+        super().__init__(parent=parent)
+
+        # References
+        self.MainContent = MainContent
+        self.MainTopBar = parent
+
+        # Set Attributes
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setWidgetResizable(True)
+        self.verticalScrollBar().setDisabled(True)
+
+        self.centralWidget = QWidget(self)
+        hBox = QHBoxLayout(self)
+        LayoutRemoveSpacing(hBox)
+        
+
+        self.setWidget(self.centralWidget)
+        self.centralWidget.setLayout(hBox)
+
+        self.TabContainer = TabContainer(self, self.MainTopBar, MainContent = self.MainContent)
+        self.AddTabButton = AddTabButton(self)
+
+        # Add Widgets
+        hBox.addWidget(self.TabContainer)
+        hBox.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
+        hBox.addWidget(self.AddTabButton)
+        hBox.addSpacerItem(QSpacerItem(10,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
+        hBox.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
+
+    def wheelEvent(self, event):
+        QApplication.sendEvent(self.horizontalScrollBar(), event)
+
+
 
 class TabContainer(QWidget):
     SelectTab = Signal(str) # When tab is selected, send signal to mainContent.py
-    def __init__(self, parent, MainContent) -> None:
+    def __init__(self, parent, MainTopBar, MainContent) -> None:
         """Container of all tabs in project
 
         Args:
@@ -117,7 +156,7 @@ class TabContainer(QWidget):
         self.setObjectName("TabsContainer")
 
         # Properties and Data
-        self.mainTopBar = parent
+        self.mainTopBar = MainTopBar
         self.selectedTabIndex = 0
         self.selectedTabWidget = None             
 
@@ -324,7 +363,8 @@ class Tab(QWidget):
         self.selected = False
 
         # Set size of tab
-        self.setMinimumSize(QSize(tabWidth, tabHeight))
+        self.setFixedSize(QSize(tabWidth, tabHeight))
+        # self.setMinimumSize(QSize(tabWidth, tabHeight))
 
         # Set tab color
         self.setAttribute(Qt.WA_StyledBackground, True)
@@ -340,7 +380,7 @@ class Tab(QWidget):
 
         # Label of Tab
         self.label = TabText(name, self)
-        self.label.setStyleSheet("color: white; border-color: transparent; background-color: transparent; margin-top: 0px;")
+        self.label.setStyleSheet("color: white; border-color: transparent; background-color: transparent; margin-top: 3px;")
         self.label.setFont(font)
 
         # Delete Button
@@ -441,7 +481,7 @@ class Tab(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         p.setPen(QPen(QColor(self.color),  1, Qt.SolidLine))
         p.setBrush(QBrush(QColor(self.color), Qt.SolidPattern))
-        p.drawEllipse(14, ((self.height() ) /2) - (dotSize/2) - 0, dotSize, dotSize)
+        p.drawEllipse(14, ((self.height() ) /2) - (dotSize/2) + 2, dotSize, dotSize)
 
         return super().paintEvent(event)
 
