@@ -40,7 +40,7 @@ class MainContent(QWidget):
         self.nodeHashTable = None
         self.selectedTab = None
         self.canvasSize = None
-        self.saveLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
+        self.saveLocation = u""
 
         # Elements
         self.topBar = MainTopBar(self, projectName = self.projectName)  # Top Bar 
@@ -54,8 +54,8 @@ class MainContent(QWidget):
         LayoutRemoveSpacing(vLayout)
 
         # INIT
-        #! Load settings before loading project
-        self.LoadProject(self.saveLocation)
+        tabID = GenerateID()
+        self.LoadProject(JSONData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"])
 
         # Signals
         self.FinishedInitializing.emit()    # Emit signal when main content has finished initialization
@@ -117,6 +117,8 @@ class MainContent(QWidget):
             self.JSONData["selectedTab"] = tabID
 
     def UpdateJSONData(self):
+        """Update JSONData with both node and tab HashTables
+        """
         dictList = []
         for key, value in self.nodeHashTable.items():
             dictList.append(value)

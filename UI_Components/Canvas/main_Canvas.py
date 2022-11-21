@@ -429,11 +429,7 @@ class MainCanvas(QGraphicsView):
         # Save changes        
         self.StoreZoomAmt()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
-        # self.SetZoomScale(zoomAmt)
 
-
-    # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
-        """This function ensures that the canvas item stays within the bounds of the scene."""
 
     # _______________ Manage Selected Canvas Nodes _______________
     def SetSelected(self, canvasItem):

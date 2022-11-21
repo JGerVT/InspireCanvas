@@ -11,63 +11,18 @@
                 "tabName": "Backgrounds 1",
                 "tabID": "8b90fda4-d4bc-45e7-a4e9-55d33455a89e",
                 "viewportPos": [
-                    30407,
-                    17073
+                    37434,
+                    20138
                 ],
-                "viewportZoom": 1.9474079178562902,
+                "viewportZoom": 1.5038545479315861,
                 "tabColor": "#23A0FF",
                 "canvasItems": [
-                    {
-                        "canvasItemID": "af3e7b4c-128b-4cad-8eec-dba0935404f3",
-                        "nodeID": "7cb13af8-2f4e-4315-a11d-b639a61f724b",
-                        "itemPos": [
-                            16192.420326768188,
-                            9195.291999717709
-                        ],
-                        "itemScale": 0.14135234994759951
-                    },
-                    {
-                        "canvasItemID": "35c378cc-1342-4e7e-9e2e-7936b7ede271",
-                        "nodeID": "d851a7f3-2dfc-44c6-ac53-7be03fd82f47",
-                        "itemPos": [
-                            16383.114972509793,
-                            9195.801533628022
-                        ],
-                        "itemScale": 0.14135234994759951
-                    },
-                    {
-                        "canvasItemID": "4eff8656-8ec0-47b8-ae34-ce71b5317a72",
-                        "nodeID": "aaf1e6c4-2964-4ad9-9859-b396c0739d41",
-                        "itemPos": [
-                            16081.634204372036,
-                            9099.911574627506
-                        ],
-                        "itemScale": 2.5698487861512325
-                    },
                     {
                         "canvasItemID": "6f81dcb3-f8e3-4e90-95d4-d1ee7a736c0a",
                         "nodeID": "2c1b4e4b-b02a-45c6-8487-a3c4ed7372a3",
                         "itemPos": [
-                            16529.16023165433,
-                            8879.73033683165
-                        ],
-                        "itemScale": 0.14135234994759951
-                    },
-                    {
-                        "canvasItemID": "fb1e48f6-3a1c-4f08-9550-5a167601aad8",
-                        "nodeID": "8787dc7f-1e18-48a7-b10e-a05705839c05",
-                        "itemPos": [
-                            16652.567162391322,
-                            9028.717721206835
-                        ],
-                        "itemScale": 0.14135234994759951
-                    },
-                    {
-                        "canvasItemID": "9c3bbc00-1e25-4cfe-b26a-4b8dd95236b6",
-                        "nodeID": "2a45beed-cf44-4995-8e32-1803e76afb3e",
-                        "itemPos": [
-                            16330.934997412813,
-                            9025.172936250223
+                            25516.01816913945,
+                            13493.161859635587
                         ],
                         "itemScale": 0.14135234994759951
                     },
@@ -75,8 +30,44 @@
                         "canvasItemID": "57c56ef6-26b4-4fc8-8b4e-a63073e7378e",
                         "nodeID": "6cf7dab5-dcc7-49a7-81a5-d1c2daf392fd",
                         "itemPos": [
-                            16627.05389008872,
-                            9185.552097709617
+                            25613.91182757384,
+                            13798.983620513554
+                        ],
+                        "itemScale": 0.14135234994759951
+                    },
+                    {
+                        "canvasItemID": "af3e7b4c-128b-4cad-8eec-dba0935404f3",
+                        "nodeID": "7cb13af8-2f4e-4315-a11d-b639a61f724b",
+                        "itemPos": [
+                            25101.8430186696,
+                            13789.364711125718
+                        ],
+                        "itemScale": 0.14135234994759951
+                    },
+                    {
+                        "canvasItemID": "35c378cc-1342-4e7e-9e2e-7936b7ede271",
+                        "nodeID": "d851a7f3-2dfc-44c6-ac53-7be03fd82f47",
+                        "itemPos": [
+                            25340.93469290102,
+                            13805.199970724476
+                        ],
+                        "itemScale": 0.14135234994759951
+                    },
+                    {
+                        "canvasItemID": "fb1e48f6-3a1c-4f08-9550-5a167601aad8",
+                        "nodeID": "8787dc7f-1e18-48a7-b10e-a05705839c05",
+                        "itemPos": [
+                            25612.806734207043,
+                            13646.182329718258
+                        ],
+                        "itemScale": 0.14135234994759951
+                    },
+                    {
+                        "canvasItemID": "9c3bbc00-1e25-4cfe-b26a-4b8dd95236b6",
+                        "nodeID": "2a45beed-cf44-4995-8e32-1803e76afb3e",
+                        "itemPos": [
+                            25337.95836343536,
+                            13647.477247610626
                         ],
                         "itemScale": 0.14135234994759951
                     },
@@ -84,10 +75,19 @@
                         "canvasItemID": "ebbf4b62-bff8-4fc8-b54d-edd373acf42a",
                         "nodeID": "d01e8c0f-fc91-4abc-9a65-b4893eb170ff",
                         "itemPos": [
-                            16226.550436726946,
-                            8925.79324692837
+                            25180.337071410693,
+                            13493.24759266698
                         ],
                         "itemScale": 0.14135234994759951
+                    },
+                    {
+                        "canvasItemID": "4eff8656-8ec0-47b8-ae34-ce71b5317a72",
+                        "nodeID": "aaf1e6c4-2964-4ad9-9859-b396c0739d41",
+                        "itemPos": [
+                            25160.709765759126,
+                            13702.790446940722
+                        ],
+                        "itemScale": 1.9203648540367912
                     }
                 ]
             },
@@ -95,63 +95,18 @@
                 "tabName": "Backgrounds 2",
                 "tabID": "58b40ca9-a24e-44c9-b8c9-98cbc4ed0e8b",
                 "viewportPos": [
-                    0,
-                    348
+                    176,
+                    179
                 ],
-                "viewportZoom": 0.30291293483969456,
+                "viewportZoom": 0.16098035300414212,
                 "tabColor": "#23A0FF",
                 "canvasItems": [
-                    {
-                        "canvasItemID": "daa2887a-4aaa-49a8-a263-ce6b4539ca45",
-                        "nodeID": "575f8c89-a246-4887-9e6c-5f0de2098df8",
-                        "itemPos": [
-                            5569.20878958439,
-                            3213.932258759954
-                        ],
-                        "itemScale": 1.0
-                    },
-                    {
-                        "canvasItemID": "c504a8d9-2b9f-4434-b85d-2db064d7eaaf",
-                        "nodeID": "f2225a34-adc3-4285-8480-ee2e9e955828",
-                        "itemPos": [
-                            3862.3932068586155,
-                            1420.953303665111
-                        ],
-                        "itemScale": 1.0
-                    },
-                    {
-                        "canvasItemID": "9f537de7-7995-4339-a86d-f83e40f63cc5",
-                        "nodeID": "ddccd720-80f7-448b-8ed5-b69f6dd9b727",
-                        "itemPos": [
-                            3676.0087636631724,
-                            3614.4606283187686
-                        ],
-                        "itemScale": 1.0
-                    },
                     {
                         "canvasItemID": "bed39e44-b213-4735-b4dc-389e2e2ffba7",
                         "nodeID": "ab56726d-34f7-4dce-a584-b6b5a6c5a5b4",
                         "itemPos": [
-                            1245.895924987697,
-                            1531.9724298909155
-                        ],
-                        "itemScale": 1.0
-                    },
-                    {
-                        "canvasItemID": "66a3d4e6-2b49-4669-a516-342447c304a7",
-                        "nodeID": "e6d9d9cd-2c22-4d53-8b47-6b27a6302332",
-                        "itemPos": [
-                            1672.3665960892063,
-                            2873.557538567359
-                        ],
-                        "itemScale": 1.0
-                    },
-                    {
-                        "canvasItemID": "6cc33412-7ff2-49f0-a22d-85f0fda219b4",
-                        "nodeID": "e71c5db5-fcb4-4ae4-9a91-ac22cf30f75b",
-                        "itemPos": [
-                            5501.670377242834,
-                            2124.3179810749652
+                            1345.2869357627096,
+                            1364.2500992080818
                         ],
                         "itemScale": 1.0
                     },
@@ -159,8 +114,8 @@
                         "canvasItemID": "c1d113cf-801d-452a-ba22-e19003ada5b2",
                         "nodeID": "1ebf5982-39cc-4184-a1fd-9019c7648cb4",
                         "itemPos": [
-                            5542.977995755167,
-                            4102.815902505667
+                            5673.428697397371,
+                            4258.114356841623
                         ],
                         "itemScale": 1.0
                     },
@@ -168,8 +123,53 @@
                         "canvasItemID": "294cfa28-e79f-4476-b6b5-5ec6bcfe9c56",
                         "nodeID": "49a5bdca-fb7c-4439-9423-e884f0e89c1b",
                         "itemPos": [
-                            1726.4242945465112,
-                            3988.3160623956123
+                            1633.245221944937,
+                            4100.130949517501
+                        ],
+                        "itemScale": 1.0
+                    },
+                    {
+                        "canvasItemID": "66a3d4e6-2b49-4669-a516-342447c304a7",
+                        "nodeID": "e6d9d9cd-2c22-4d53-8b47-6b27a6302332",
+                        "itemPos": [
+                            1076.0205314391324,
+                            2935.676920301742
+                        ],
+                        "itemScale": 1.0
+                    },
+                    {
+                        "canvasItemID": "daa2887a-4aaa-49a8-a263-ce6b4539ca45",
+                        "nodeID": "575f8c89-a246-4887-9e6c-5f0de2098df8",
+                        "itemPos": [
+                            5879.805698256304,
+                            3064.845742597435
+                        ],
+                        "itemScale": 1.0
+                    },
+                    {
+                        "canvasItemID": "6cc33412-7ff2-49f0-a22d-85f0fda219b4",
+                        "nodeID": "e71c5db5-fcb4-4ae4-9a91-ac22cf30f75b",
+                        "itemPos": [
+                            5507.882315416272,
+                            1819.9330105764898
+                        ],
+                        "itemScale": 1.0
+                    },
+                    {
+                        "canvasItemID": "c504a8d9-2b9f-4434-b85d-2db064d7eaaf",
+                        "nodeID": "f2225a34-adc3-4285-8480-ee2e9e955828",
+                        "itemPos": [
+                            3607.7037417476467,
+                            1470.6488090526168
+                        ],
+                        "itemScale": 1.0
+                    },
+                    {
+                        "canvasItemID": "9f537de7-7995-4339-a86d-f83e40f63cc5",
+                        "nodeID": "ddccd720-80f7-448b-8ed5-b69f6dd9b727",
+                        "itemPos": [
+                            3595.2535674084747,
+                            3788.3948971750406
                         ],
                         "itemScale": 1.0
                     },
@@ -177,8 +177,8 @@
                         "canvasItemID": "b2384216-c45d-42bf-9d39-6c5627801f94",
                         "nodeID": "5bfb3add-c23c-42e8-8c8d-8346f33483db",
                         "itemPos": [
-                            3696.1115595558986,
-                            2899.843152834859
+                            3528.389228873065,
+                            3079.9893598645695
                         ],
                         "itemScale": 19.675804848468058
                     }
