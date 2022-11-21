@@ -28,6 +28,12 @@
                         "nodeID": "ab5426af-ab12-2e0e-8220-0147ac468b6c",
                         "itemPos": [2100,2550],
                         "itemScale": 1
+                    },
+                    {
+                        "canvasItemID": "ab5426af-ab12-2g0e-8120-6147ac468b6c",
+                        "nodeID": "ab5416af-ab12-3e0e-8220-0147ac468b6c",
+                        "itemPos": [2400,2050],
+                        "itemScale": 1
                     }
                 ]
             },
@@ -82,6 +88,14 @@
                 "creationTime": 1666574234,
                 "canvasItemReferences": ["90c9afe9-d43f-43ab-bf7c-744b80ab8f54"],
                 "nodeText": "Text"
+            },
+            {
+                "nodeType": "File_Node",
+                "nodeName": "FileBox",
+                "nodeID": "ab5416af-ab12-3e0e-8220-0147ac468b6c",
+                "creationTime": 1666574234,
+                "canvasItemReferences": ["90c9afe9-d43f-43ab-bf7c-744b80ab8f54"],
+                "filePath": "E:\\OneDrive\\Software Development\\Inspire Canvas - Fall 2022\\Inspire Canvas - Applied Software Fall 2022\\inspireCanvasMain.py"
             }
         ]
     }

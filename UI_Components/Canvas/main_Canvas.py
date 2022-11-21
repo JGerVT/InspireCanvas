@@ -14,6 +14,7 @@ from Settings.settings import *
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *
 from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
 from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
+from UI_Components.Canvas.CanvasItem.file_CanvasItem import FileCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
 from UI_Components.ContextMenu.contextMenu import *
@@ -137,7 +138,10 @@ class MainCanvas(QGraphicsView):
             newCanvasItem = ImageCanvasItem(self, canvasItemData)
         elif nodeData["nodeType"] == "Text_Node":
             newCanvasItem = TextCanvasItem(self, canvasItemData)
+        elif nodeData["nodeType"] == "File_Node":
+            newCanvasItem = FileCanvasItem(self, canvasItemData)        
         else:   # If type is not valid, do not add to database.
+            ConsoleLog.error("Invalid Item Type", "[" + str(nodeData["nodeType"]) + "] is not a valid node type.")
             return None
 
         self.SetReference(canvasItemData["nodeID"], canvasItemData["canvasItemID"])  # Update Reference
@@ -236,6 +240,22 @@ class MainCanvas(QGraphicsView):
 
         return canvasItem
     
+    def NewFileCanvasItem(self, filePath: str, position: QPointF, scale = 1):
+        """Create a new File Canvas Item
+
+        Args:
+            filePath (str): path to the file
+
+        Returns:
+            CanvasItem: Returns the new Canvas Item
+        """
+        fileNodeData = CreateFileData(filePath)
+        canvasItemData = CreateCIData(fileNodeData["nodeID"], position, scale)
+        fileNodeData["canvasItemReferences"].append(canvasItemData["canvasItemID"])
+
+        self.SetAllData(canvasItemData, fileNodeData)   # Set data to databases
+        self.InsertCanvasItem(canvasItemData)   # Insert text node
+
     # ________________________________________
     
     # ----- Copy and Paste -----
@@ -696,6 +716,13 @@ class MainScene (QGraphicsScene):
             except:
                 pass
             return
+
+        elif type(self.topWidgetUnderMouse) == FileCanvasItem and self.onlyOneCanvasItemSelected() != None:
+            try:
+                openFile(self.topWidgetUnderMouse.filePath)
+            except:
+                pass
+            return
         # return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event) -> None:
@@ -740,6 +767,8 @@ class MainScene (QGraphicsScene):
                         initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
 
                     else: # Is a file type
+                        self.mainView.NewFileCanvasItem(url.toLocalFile(), initPosition)
+                        initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
                         print("Dropped File")
 
             elif event.mimeData().hasImage():
