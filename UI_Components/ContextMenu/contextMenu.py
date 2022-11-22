@@ -72,6 +72,15 @@ def CanvasItemContextMenu(self, event):
     elif action == insertText:          # Insert Text CanvasItem
         self.NewTextCanvasItem("Text", clickPos, 1)
 
+    elif action == insertFile:
+        files = QFileDialog.getOpenFileNames(self,"Select Files",".")
+
+        if files[0] != "":
+            i = 0
+            for filePath in files[0]:
+                position = clickPos + QPointF(10*i, 10*i)
+                self.NewFileCanvasItem(filePath, position)
+                i += 1
 
     elif action == saveProject:
         saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
