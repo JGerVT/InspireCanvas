@@ -37,6 +37,8 @@ class FileCanvasItem(CanvasItem):
         self.icon.setPixmap(self.scaled)
         self.icon.setPos(12, self.boundingRect().height()/2 - self.icon.boundingRect().height()/2)
 
+        ConsoleLog.log("Added FileCanvasItem", "Successfully added File. canvasItem: " + str(self.canvasItemData) + " filePath: " + self.filePath) 
+
 
     def paint(self, painter, option, widget) -> None:
         painter.setRenderHint(painter.Antialiasing, True)

@@ -18,7 +18,6 @@ def log(name: str, description = ""):
         description (str, optional): description of log. Defaults to "".
     """
     log = getDateTime() + ": " + name + " - " + description
-    print(log)
 
     # Write to log file
     try:
@@ -29,8 +28,11 @@ def log(name: str, description = ""):
     except:
         print("Error File not found.")
 
+    return log
+
 def error(errorName: str, description = ""):
-    log("[ERROR] " + errorName, description)    
+    log_ = log("[ERROR] " + errorName, description)    
+    print(log_) # Print errors to canvas
 
 def alert(errorName: str, description = ""):
     log("[ALERT] " + errorName, description)    

@@ -32,6 +32,8 @@ class TextCanvasItem(CanvasItem):
         # INIT
         self.text.setPlainText(self.nodeText)
 
+        ConsoleLog.log("Added TextCanvasItem", "Successfully added Text.  canvasItem: " + str(self.canvasItemData) + " text: " + self.nodeText) 
+
     # ----- Utility ----- 
     def isEditable(self):
         """Get if the text box can be edited."""

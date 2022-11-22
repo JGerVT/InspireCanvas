@@ -32,6 +32,8 @@ class ImageCanvasItem(CanvasItem):
         self.pixmapItem.setPixmap(self.getImage(self.imagePath))    # Set Image to self.pixmapItem
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
+        ConsoleLog.log("Added ImageCanvasItem", "Successfully added Image. canvasItem: " + str(self.canvasItemData) + "  imagePath: " + self.imagePath) 
+
     def getImage(self, path):
         """ Returns the converted image from the path.
             This is required to bypass a rendering error.

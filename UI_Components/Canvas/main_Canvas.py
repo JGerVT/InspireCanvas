@@ -278,12 +278,14 @@ class MainCanvas(QGraphicsView):
 
             # If not text node, duplicate node, else create new node of type text. This needs to be done so editing text does not overwrite previous text.
             if self.nodeHashTable[item["nodeID"]]["nodeType"] != "Text_Node":   
-                item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
-                self.AddSelected(item)
+                newNode =  self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
+                self.AddSelected(newNode)
             else:
                 nodeName = self.nodeHashTable[item["nodeID"]]["nodeName"]
                 nodeText = self.nodeHashTable[item["nodeID"]]["nodeText"]
-                self.NewTextCanvasItem(nodeText, newLocation, item["scale"], nodeName = nodeName)                
+                newNode = self.NewTextCanvasItem(nodeText, newLocation, item["scale"], nodeName = nodeName)   
+                self.AddSelected(newNode)
+
 
     # ________________________________________
 
@@ -330,13 +332,11 @@ class MainCanvas(QGraphicsView):
             self.nodeHashTable[nodeID]["canvasItemReferences"].append(canvasItemID)
 
 
-    def RemoveReference(self, nodeID, canvasItemID):
-        del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
+    def RemoveReference(self, nodeID, canvasItemID):    # Caused too many errors, so I am temporarily removing it.
+        # del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
 
-        if canvasItemID in self.nodeHashTable[nodeID]["canvasItemReferences"]:
-            del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
-
-        print(self.nodeHashTable[nodeID]["canvasItemReferences"])
+        # if canvasItemID in self.nodeHashTable[nodeID]["canvasItemReferences"]:
+        #     del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
 
         return len(self.nodeHashTable[nodeID]["canvasItemReferences"])
 
