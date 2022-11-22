@@ -37,7 +37,7 @@ class FileCanvasItem(CanvasItem):
 
         # Draw Text
         font = painter.font()
-        font.setPointSize(10)
+        font.setPointSize(9)
         painter.setFont(font)
 
         painter.setPen(QPen("White"))

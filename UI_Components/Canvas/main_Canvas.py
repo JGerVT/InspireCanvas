@@ -219,7 +219,7 @@ class MainCanvas(QGraphicsView):
         self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
         self.InsertCanvasItem(canvasItemData)   # Insert text node
     #   New Text CanvasItem
-    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1):
+    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1, nodeName = "Text_Node"):
         """ Create a new Text Canvas Item
 
         Args:
@@ -230,7 +230,7 @@ class MainCanvas(QGraphicsView):
         Returns:
             _type_: _description_
         """
-        textNodeData = CreateTextData(text)
+        textNodeData = CreateTextData(text, nodeName)
         newID = textNodeData["nodeID"]
         canvasItemData = CreateCIData(newID, position, scale)
 
@@ -276,8 +276,14 @@ class MainCanvas(QGraphicsView):
         for item in self.copyCanvasItemData:
             newLocation = clickPos + item["offsetPos"]
 
-            item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
-            self.AddSelected(item)
+            # If not text node, duplicate node, else create new node of type text. This needs to be done so editing text does not overwrite previous text.
+            if self.nodeHashTable[item["nodeID"]]["nodeType"] != "Text_Node":   
+                item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
+                self.AddSelected(item)
+            else:
+                nodeName = self.nodeHashTable[item["nodeID"]]["nodeName"]
+                nodeText = self.nodeHashTable[item["nodeID"]]["nodeText"]
+                self.NewTextCanvasItem(nodeText, newLocation, item["scale"], nodeName = nodeName)                
 
     # ________________________________________
 

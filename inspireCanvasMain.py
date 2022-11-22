@@ -19,63 +19,7 @@ from Settings.settings import *
 
 #Components Used:
 from UI_Components.mainContent import *
-
-
-
-# Side/Corner grp drag code from https://stackoverflow.com/a/62812752
-class SideGrip(QWidget):
-    def __init__(self, parent, edge):
-        QWidget.__init__(self, parent)
-        if edge == Qt.LeftEdge:
-            self.setCursor(Qt.SizeHorCursor)
-            self.resizeFunc = self.resizeLeft
-        elif edge == Qt.TopEdge:
-            self.setCursor(Qt.SizeVerCursor)
-            self.resizeFunc = self.resizeTop
-        elif edge == Qt.RightEdge:
-            self.setCursor(Qt.SizeHorCursor)
-            self.resizeFunc = self.resizeRight
-        else:
-            self.setCursor(Qt.SizeVerCursor)
-            self.resizeFunc = self.resizeBottom
-        self.mousePos = None
-
-    def resizeLeft(self, delta):
-        window = self.window()
-        width = max(window.minimumWidth(), window.width() - delta.x())
-        geo = window.geometry()
-        geo.setLeft(geo.right() - width)
-        window.setGeometry(geo)
-
-    def resizeTop(self, delta):
-        window = self.window()
-        height = max(window.minimumHeight(), window.height() - delta.y())
-        geo = window.geometry()
-        geo.setTop(geo.bottom() - height)
-        window.setGeometry(geo)
-
-    def resizeRight(self, delta):
-        window = self.window()
-        width = max(window.minimumWidth(), window.width() + delta.x())
-        window.resize(width, window.height())
-
-    def resizeBottom(self, delta):
-        window = self.window()
-        height = max(window.minimumHeight(), window.height() + delta.y())
-        window.resize(window.width(), height)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.mousePos = event.position()
-
-    def mouseMoveEvent(self, event):
-        if self.mousePos is not None:
-            delta = event.position() - self.mousePos
-            self.resizeFunc(delta)
-
-    def mouseReleaseEvent(self, event):
-        self.mousePos = None
-
+from Utility.SideGrips import *
 
 
 class MainWindow(QMainWindow):
@@ -92,11 +36,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Inspire Canvas")
         self.setWindowIcon(QIcon(softwareIconLocation))
         self.resize(startingWindowSize[0], startingWindowSize[1])   # Set default window size to window size set in settings
+        self.setMinimumSize(650,400)
 
-        # Frameless code
+        # ----- Frameless code from https://stackoverflow.com/a/62812752 -----
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.gripSize = 7
         self.grips = []
+        self.sideGrips = [
+            SideGrip(self, Qt.LeftEdge), 
+            SideGrip(self, Qt.TopEdge), 
+            SideGrip(self, Qt.RightEdge), 
+            SideGrip(self, Qt.BottomEdge), 
+        ]
+
+        self.cornerGrips = [QSizeGrip(self) for i in range(4)]
+
         for i in range(4):
             grip = QSizeGrip(self)
             grip.resize(self.gripSize, self.gripSize)
@@ -120,17 +74,7 @@ class MainWindow(QMainWindow):
             
             self.setStyleSheet(style)
 
-        self.sideGrips = [
-            SideGrip(self, Qt.LeftEdge), 
-            SideGrip(self, Qt.TopEdge), 
-            SideGrip(self, Qt.RightEdge), 
-            SideGrip(self, Qt.BottomEdge), 
-        ]
-        # corner grips should be "on top" of everything, otherwise the side grips
-        # will take precedence on mouse events, so we are adding them *after*;
-        # alternatively, widget.raise_() can be used
-        self.cornerGrips = [QSizeGrip(self) for i in range(4)]
-
+    # Grips and Side grips
     def resizeEvent(self, event):
         QMainWindow.resizeEvent(self, event)
         rect = self.rect()
@@ -153,8 +97,7 @@ class MainWindow(QMainWindow):
         self.updateGrips()
 
     def updateGrips(self):
-        # self.setContentsMargins(*[self.gripSize] * 4)
-
+        """Update position of all grips"""
         for grip in self.cornerGrips:
             grip.raise_()
         for grip in self.sideGrips:

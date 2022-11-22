@@ -47,8 +47,6 @@ class MainTopBar(QWidget):
         # Widgets in top bar
         self.hamburgerButton = HamburgerButton(self)
         self.tabScrollbar = TabScrollbar(self, self.MainContent)
-        # self.TabContainer = TabContainer(self, MainContent = self.MainContent)
-        # self.AddTabButton = AddTabButton(self)
 
         self.WindowOptions = WindowOptions(self)
 
@@ -56,10 +54,6 @@ class MainTopBar(QWidget):
         hLayout = QHBoxLayout(self)
         hLayout.addWidget(self.hamburgerButton)
         hLayout.addWidget(self.tabScrollbar)
-        # hLayout.addWidget(self.TabContainer)
-        # hLayout.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
-        # hLayout.addWidget(self.AddTabButton)
-        # hLayout.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
         hLayout.addWidget(self.WindowOptions)
         LayoutRemoveSpacing(hLayout)
 
@@ -79,8 +73,24 @@ class MainTopBar(QWidget):
         if event.button() == Qt.MouseButton.RightButton:
             TabBarContextMenu(self, event)
             return
+        elif event.button() == Qt.MouseButton.LeftButton:
+            self.initClickPos = event.pos()
+            self.initWindowPos = self.window().pos()
 
         return super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            if findMainWindow().isMaximized():
+                findMainWindow().showNormal()
+            else:
+                findMainWindow().showMaximized()
+        return super().mouseDoubleClickEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self.initClickPos:
+            findMainWindow().move(findMainWindow().pos() + event.pos() - self.initClickPos)
+        return super().mouseMoveEvent(event)
 
 class HamburgerButton(QPushButton):
     def __init__(self, parent):
@@ -453,6 +463,7 @@ class Tab(QWidget):
         elif event.button() == Qt.MouseButton.LeftButton:
             self.parent().SetSelectedWidget(self)
             self.setFocus()
+            return True
         return super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event) -> None:
@@ -464,6 +475,7 @@ class Tab(QWidget):
     def mouseMoveEvent(self, event) -> None:
         if event.buttons() == Qt.MouseButton.LeftButton:
             self.tabContainer.moveTab(self, self.mapToParent(event.pos()))
+            return True
         return super().mouseMoveEvent(event)
 
     def eventFilter(self, watched, event) -> bool:
@@ -629,15 +641,18 @@ class NavButtons(QPushButton):
         self.setIcon(self.pixmap)
 
     #Click mouse button
-    def mousePressEvent(self, e) -> None:
+    def mouseReleaseEvent(self, e) -> None:
         if self.name == "closeWindow":
             findMainWindow().close()
+            return True
         elif self.name == "minimizeWindow":
             findMainWindow().showMinimized()
+            return True
 
         elif self.name == "maximizeWindow": 
             if findMainWindow().isMaximized():
                 findMainWindow().showNormal()
             else:
                 findMainWindow().showMaximized()
-        return super().mousePressEvent(e)
+            return True
+        return super().mouseReleaseEvent(e)
