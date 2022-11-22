@@ -1,5 +1,5 @@
 """
-Description:  This file provides code for context menus when the tab bar or canvas are right clicked. 
+Description:  This file provides code for context menus when the TabBar or Canvas are right clicked 
 
 Date Created: 11/6/22 
 Date Updated: 11/10/22
@@ -14,18 +14,20 @@ from Utility.UtilityFunctions import *
 from Utility.ManageJSON import *
 
 def CanvasItemContextMenu(self, event):
-    """ Context Menu when the canvas is right clicked
+    """ Context Menu that displays when the canvas is right clicked
     Args: 
         event: MouseClick event
-    
     """
 
+    # Properties
     selected = self.selectedItemGroup
     clickPos = self.mapToScene(event.pos())
 
+    # Menu
     contextMenu = QMenu()
     contextMenu.setStyleSheet(qMenuStyle)
 
+    # Menu Items
     copyItem = contextMenu.addAction("Copy")            # Copy
     pasteItem = contextMenu.addAction("Paste")          # Paste
     deleteItem = contextMenu.addAction("Delete")        # Delete
@@ -46,15 +48,15 @@ def CanvasItemContextMenu(self, event):
     loadProject = contextMenu.addAction("Load Project")     # Load Project
     newProject = contextMenu.addAction("New Project")       # New Project
 
-    action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+    action = contextMenu.exec_(self.mapToGlobal(event.pos()))   # Display Menu
 
-    if action == copyItem:
+    if action == copyItem:              # Copy Item
         self.CopySelection()
 
     elif action == pasteItem and self.copyCanvasItemData != None:
-        self.PasteSelection(clickPos)
+        self.PasteSelection(clickPos)   # Paste Item
 
-    elif action == deleteItem:
+    elif action == deleteItem:          # Delete Item
         for item in selected.childItems():
             self.RemoveCanvasItem(item)
 
@@ -72,7 +74,7 @@ def CanvasItemContextMenu(self, event):
     elif action == insertText:          # Insert Text CanvasItem
         self.NewTextCanvasItem("Text", clickPos, 1)
 
-    elif action == insertFile:
+    elif action == insertFile:          # Insert File CanvasItem
         files = QFileDialog.getOpenFileNames(self,"Select Files",".")
 
         if files[0] != "":
@@ -82,12 +84,12 @@ def CanvasItemContextMenu(self, event):
                 self.NewFileCanvasItem(filePath, position)
                 i += 1
 
-    elif action == saveProject:
+    elif action == saveProject:         # Save Project
         saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
         if(saveLocation[0] != ""):
             self.MainContent.SaveProject(saveLocation[0])
 
-    elif action == loadProject:
+    elif action == loadProject:         # Load Project
         dataFile = QFileDialog.getOpenFileName(self, "Select JSON Project", ".", "JSON (*.json)")
         
         if dataFile[0] != "":
@@ -96,7 +98,7 @@ def CanvasItemContextMenu(self, event):
             else:
                 print("ERROR")               
 
-    elif action == newProject:
+    elif action == newProject:          # Create New Project
         tabID = GenerateID()
         self.MainContent.LoadProject(JSONData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"])
 
@@ -104,14 +106,15 @@ def CanvasItemContextMenu(self, event):
 # ----- Tab Bar Context Menu -----
 def TabBarContextMenu(self, event):
     """ Context Menu when the tab bar is right clicked
-
     Args: 
         event: MouseClick event
     """
 
+    # Menu
     contextMenu = QMenu()
     contextMenu.setStyleSheet(qMenuStyle)
 
+    # Menu Items
     copyItem = contextMenu.addAction("Copy Tab")            # Copy Tab 
     pasteItem = contextMenu.addAction("Paste Tab")          # Paste Tab
     closeItem = contextMenu.addAction("Delete Tab")         # Delete Tab
@@ -158,12 +161,12 @@ def TabBarContextMenu(self, event):
             self.tabContainer.createNewTab(self.getIndex())
         else:
             self.tabContainer.createNewTab()
-    elif action == saveProject:     # Save Project
+    elif action == saveProject:         # Save Project
         saveLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
         if(saveLocation[0] != ""):
             self.MainContent.SaveProject(saveLocation[0])
 
-    elif action == loadProject:     # Load Project
+    elif action == loadProject:         # Load Project
         dataFile = QFileDialog.getOpenFileName(self, "Select JSON Project", ".", "JSON (*.json)")
         
         if dataFile[0] != "":
@@ -172,7 +175,7 @@ def TabBarContextMenu(self, event):
             else:
                 print("ERROR")
 
-    elif action == newProject:      # New Project
+    elif action == newProject:          # New Project
         newProjectLocation = QFileDialog.getSaveFileName(self, "Save Location", ".", "JSON (*.json)")
         
         if newProjectLocation[0] != "":

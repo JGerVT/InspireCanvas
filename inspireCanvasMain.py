@@ -76,9 +76,10 @@ class MainWindow(QMainWindow):
 
     # Grips and Side grips
     def resizeEvent(self, event):
+        """On resize, move grips"""
         QMainWindow.resizeEvent(self, event)
         rect = self.rect()
-        # top left grip doesn't need to be moved...
+        # top left grip doesn't need to be moved
         # top right
         self.grips[1].move(rect.right() - self.gripSize, 0)
         # bottom right

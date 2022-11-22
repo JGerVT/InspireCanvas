@@ -1,5 +1,6 @@
 """
-Description: This python file creates the TopBar of the software, which includes: Tabs and Window Buttons (i.e. Maximize, Minimize, and Close buttons)
+Description: This python file creates the TopBar of the software. 
+This includes: Tabs and Window Buttons (i.e. Maximize, Minimize, and Close buttons)
 
 Date Created: 9/27/22 
 Date Updated: 9/28/22
@@ -57,18 +58,30 @@ class MainTopBar(QWidget):
         hLayout.addWidget(self.WindowOptions)
         LayoutRemoveSpacing(hLayout)
 
-        # Init
-
     def SetTabs(self, tabHashTable, selectedTab):
+        """ Initializes/Loads the tabs, populating the top bar.
+            This is the first function that is called when initializing the TopBar tabs
+
+        Args:
+            tabHashTable (dict): This is a dictionary of all the tabs. Retrievable by it's ID
+            selectedTab (str):  The id of the selected tab.
+        """
         self.tabHashTable = tabHashTable
         self.tabScrollbar.TabContainer.SetTabs(selectedTab)
 
     def GetCopy(self):
+        """Get the copied tab"""
         return self.copyTab
 
     def SetCopy(self, copy):
+        """Set the copied tab
+        
+        Args:
+            copy (dict): save copy tab data to self.copyTab
+        """
         self.copyTab = copy
 
+    # ------ Events ------
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.RightButton:
             TabBarContextMenu(self, event)
@@ -95,7 +108,7 @@ class MainTopBar(QWidget):
 class HamburgerButton(QPushButton):
     def __init__(self, parent):
         """
-        Left Hamburger button. (Not Implemented yet)
+        Left Hamburger button. (NOT IMPLEMENTED)
         """
         super().__init__(parent=parent)
         self.setCheckable(True)
@@ -112,6 +125,12 @@ class HamburgerButton(QPushButton):
 
 class TabScrollbar(QScrollArea):
     def __init__(self, parent, MainContent) -> None:
+        """ ScrollArea for the tab container and Tab Add button. 
+            This allows the scrolling of tabs.
+
+        Args:
+            MainContent (MainContent): This is a link to MainContent in mainContent.py 
+        """
         super().__init__(parent=parent)
 
         # References
@@ -124,6 +143,7 @@ class TabScrollbar(QScrollArea):
         self.setWidgetResizable(True)
         self.verticalScrollBar().setDisabled(True)
 
+        # Layout
         self.centralWidget = QWidget(self)
         hBox = QHBoxLayout(self)
         LayoutRemoveSpacing(hBox)
@@ -132,10 +152,11 @@ class TabScrollbar(QScrollArea):
         self.setWidget(self.centralWidget)
         self.centralWidget.setLayout(hBox)
 
+        # Widget Contents
         self.TabContainer = TabContainer(self, self.MainTopBar, MainContent = self.MainContent)
         self.AddTabButton = AddTabButton(self)
 
-        # Add Widgets
+        # Layout add Widgets
         hBox.addWidget(self.TabContainer)
         hBox.addSpacerItem(QSpacerItem(6,40,QSizePolicy.Minimum, QSizePolicy.Minimum))
         hBox.addWidget(self.AddTabButton)
@@ -143,6 +164,7 @@ class TabScrollbar(QScrollArea):
         hBox.addSpacerItem(QSpacerItem(MaxSize,40,QSizePolicy.Maximum, QSizePolicy.Minimum))
 
     def wheelEvent(self, event):
+        """This makes the scroll wheel scroll horizontally"""
         QApplication.sendEvent(self.horizontalScrollBar(), event)
 
 
@@ -155,7 +177,7 @@ class TabContainer(QWidget):
         Args:
             selectedTab (int, optional): sets the selected tab. Defaults to 0.
             Tabs (_type_, optional): All tabs from Project JSON data. Defaults to None.
-            MainContent (MainContent, optional): Top MainContent class. Used to connect signals Defaults to None.
+            MainContent (MainContent): Top MainContent class. Used to connect signals Defaults to None.
         """
         super().__init__(parent)
 
@@ -182,10 +204,10 @@ class TabContainer(QWidget):
     def FinishedInitializing(self): 
         """When the main content is all initialized. This function emits a signal when a new tab is selected and calls self.SetSelected to update the canvas"""
         self.SelectTab.connect(self.MainContent.TabSelected)
-        # self.SetSelectedWidget(self.GetTab(self.selectedTabIndex))  # Set selected tab on initialization
 
-    # Add/Set/Removing Tabs
+    # ----- Add/Set/Removing Tabs -----
     def SetTabs(self, selectedTab):
+        """Add all the tabs to the TabBar from 'self.mainTopBar.tabHashTable'. Then set the selected tab."""
         self.selectedTabIndex = selectedTab
 
         self.RemoveAllTabs()
@@ -194,6 +216,7 @@ class TabContainer(QWidget):
         self.SetSelectedWidget(self.GetTab(selectedTab))
 
     def RemoveAllTabs(self):
+        """Remove all tabs from the tab bar"""
         for index in reversed(range(self.hBoxLayout.count())):
             widget = self.hBoxLayout.itemAt(index).widget()
             if widget.__class__.__name__ == "Tab":
@@ -201,6 +224,7 @@ class TabContainer(QWidget):
                 widget.deleteLater()
 
     def AddTabsFromData(self, tabsData):
+        """Add Tabs from the data passed by user"""
         for key in tabsData:
             self.AddTab(tabsData[key]["tabID"], tabsData[key]["tabName"], tabsData[key]["tabColor"], setSelected = False)
 
@@ -221,6 +245,12 @@ class TabContainer(QWidget):
             self.hBoxLayout.insertWidget(index + 1, newTab)
 
     def duplicateTab(self, tabWidget, index = None):
+        """Duplicate a tab.
+
+        Args:
+            tabWidget (QWidget): Tab to be duplicated
+            index (int, optional): Where the new tab will be inserted. Defaults to None.
+        """
         newID = GenerateID()
         tabName = tabWidget.name
         tabColor = tabWidget.color
@@ -235,6 +265,17 @@ class TabContainer(QWidget):
             self.hBoxLayout.insertWidget(index + 1, newTab)
 
     def AddTab(self, tabID, name = "", color = "#23A0FF", setSelected = True):
+        """ Create a new tab with the passed data.
+
+        Args:
+            tabID (str): id of the tab to be added
+            name (str, optional): name of the tab to be added. Defaults to "".
+            color (str, optional): color of the tab to be added. Defaults to "#23A0FF".
+            setSelected (bool, optional): selected status of the tab. Defaults to True.
+
+        Returns:
+            QWidget: Return the newly created tab
+        """
         tab = Tab(self, tabID, name, color, mainContent=self.MainContent)
         self.hBoxLayout.addWidget(tab)
         if setSelected:
@@ -280,6 +321,11 @@ class TabContainer(QWidget):
             return False
 
     def SetSelectedWidget(self, tabWidget):
+        """ Set selected widget to the passed widget
+
+        Args:
+            tabWidget (QWidget): Tab Widget to be selected.
+        """
         self.selectedTabWidget = tabWidget
         if tabWidget != None:
             self.SelectTab.emit(tabWidget.tabID)
@@ -499,21 +545,30 @@ class Tab(QWidget):
 
     def SaveTabText(self, text):
         self.tabContainer.mainTopBar.tabHashTable[self.tabID]["tabName"] = text
+
+
 class TabText(QLineEdit):
     def __init__(self, text, parent)  -> None:
+        """ Text displayed in Tab
+
+        Args:
+            text (str): string displayed in tab
+        """
         super().__init__(text, parent)
         self.setEnabled(False)
 
         # References
         self.Tab = parent
 
-
+        # Signals
         self.returnPressed.connect(self.StopEdit)
 
     def StopEdit(self):
+        """Disable editing"""
         self.setEnabled(False)
         self.Tab.SaveTabText(self.text())
 
+    # ----- Events -----
 
     def focusOutEvent(self, arg__1) -> None:
         self.StopEdit()
@@ -524,12 +579,13 @@ class TabText(QLineEdit):
             self.setEnabled(True)
             self.setFocus()
             self.selectAll()
+        return True # Handle double click events
         # return super().mouseDoubleClickEvent(event)
 
 
 class AddTabButton(QPushButton):
     def __init__(self, parent):
-        """+ Button to add new tab
+        """ Plus button to add new tabs to the tab container
         """
         super().__init__(parent=parent)
 
@@ -541,6 +597,7 @@ class AddTabButton(QPushButton):
         self.parentTopBar = parent    
         self.tabContainer = parent.TabContainer    
 
+        # Set Atributes
         self.setStyleSheet("""
         QPushButton{
             background-color: transparent; 
@@ -551,8 +608,9 @@ class AddTabButton(QPushButton):
         self.setCursor(QCursor(Qt.PointingHandCursor))
         self.setFixedHeight(25)
         self.setFixedWidth(25)
-        self.setIconSize(QSize(13,13))
 
+        # Icon
+        self.setIconSize(QSize(13,13))
         self.setIcon(QPixmap("Resources\svg\AddTab.svg"))
         self.installEventFilter(self)
 
@@ -561,12 +619,15 @@ class AddTabButton(QPushButton):
         self.setGraphicsEffect(self.op)
         self.op.setOpacity(self.minOpacity)
 
+
+    def AddTab(self):
+        """Button was clicked. Create a new tab"""
+        self.tabContainer.createNewTab()
+
+    # ----- Events -----
     def mousePressEvent(self, e) -> None:
         self.AddTab()
         return super().mousePressEvent(e)
-
-    def AddTab(self):
-        self.tabContainer.createNewTab()
 
     def eventFilter(self, object, event):
         if event.type() == QEvent.HoverEnter:
@@ -658,16 +719,15 @@ class NavButtons(QPushButton):
         """)
 
 
-    #Click mouse button
+    # ----- Events -----
     def mouseReleaseEvent(self, e) -> None:
-        if self.name == "closeWindow":
+        if self.name == "closeWindow":      # Clicked Close Window
             findMainWindow().close()
             return True
-        elif self.name == "minimizeWindow":
+        elif self.name == "minimizeWindow": # Clicked Minimize Window
             findMainWindow().showMinimized()
             return True
-
-        elif self.name == "maximizeWindow": 
+        elif self.name == "maximizeWindow": # Clicked Maximize Window
             if findMainWindow().isMaximized():
                 findMainWindow().showNormal()
             else:

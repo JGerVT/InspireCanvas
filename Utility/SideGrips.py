@@ -1,3 +1,10 @@
+"""
+Description: This python file resizing functionality for my software. This code came from this stack overflow post:  https://stackoverflow.com/a/62812752 
+
+Date Created: 10/18/22 
+Date Updated: 11/22/22
+"""
+
 #PySide
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -6,6 +13,11 @@ from PySide6.QtCore import *
 # Side/Corner drag code from https://stackoverflow.com/a/62812752
 class SideGrip(QWidget):
     def __init__(self, parent, edge):
+        """Code that allows dragging from application edges
+
+        Args:
+            edge (_type_): edge to be dragged
+        """
         QWidget.__init__(self, parent)
         if edge == Qt.LeftEdge:
             self.setCursor(Qt.SizeHorCursor)

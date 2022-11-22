@@ -1,8 +1,8 @@
 """
-Description: This python file provides the top level and main structure of this PySide application.  
+Description: This python file provides the top level main structure of this application.  
 
 Date Created: 9/27/22 
-Date Updated: 10/15/22
+Date Updated: 11/22/22
 """
 
 # --Imports--
@@ -25,7 +25,7 @@ from UI_Components.ContextMenu.contextMenu import * # Needed for initialization
 class MainContent(QWidget):
     FinishedInitializing = Signal() # When software finishes initialization, emit this signal
     def __init__(self, parent) -> None:
-        """This class contains layout with TopBar and MainCanvas. Provides the main structure and layout of the application."""
+        """This class contains layout with TopBar and MainCanvas and provides the main structure and layout of the application."""
         super().__init__(parent)
 
         # Set Attributes
@@ -40,7 +40,7 @@ class MainContent(QWidget):
         self.nodeHashTable = None
         self.selectedTab = None
         self.canvasSize = None
-        self.saveLocation = u""
+        self.saveLocation = u""     # Currently loaded project JSON location
 
         # Elements
         self.topBar = MainTopBar(self, projectName = self.projectName)  # Top Bar 
@@ -166,6 +166,9 @@ class MainContent(QWidget):
 
 class ZoomButtons(QWidget):
     def __init__(self, parent) -> None:
+        """ Zoom buttons that display in the bottom left corner.
+            These buttons allow the user to set a zoom level, or click zoom-in / zoom-out buttons. 
+        """
         super().__init__(parent)
         
         # References

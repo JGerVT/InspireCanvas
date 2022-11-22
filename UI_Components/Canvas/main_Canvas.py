@@ -679,7 +679,7 @@ class MainScene (QGraphicsScene):
             return 
 
         #* Item under mouse on click
-        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected()):
+        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.GetIsSelected()):
             if event.modifiers() and Qt.Modifier.SHIFT: # If Shift held, add item to selection
                 self.mainView.AddSelected(self.topWidgetUnderMouse)
                 self.canDrag = False

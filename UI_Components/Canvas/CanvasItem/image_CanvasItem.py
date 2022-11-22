@@ -1,3 +1,10 @@
+""" 
+Description:  This python file provides the functionality for ImageCanvasItems on the Canvas
+
+Date Created: 10/18/22 
+Date Updated: 11/22/22
+"""
+
 #Imports
 from pathlib import Path
 from PIL.ImageQt import ImageQt
@@ -7,54 +14,42 @@ from UI_Components.Canvas.CanvasItem.baseCanvasItem import *
 
 class ImageCanvasItem(CanvasItem):
     def __init__(self, parent, canvasItemData) -> None:
+        """ Provides the functionality for Image Canvas Items
+
+        Args:
+            canvasItemData (dict): CanvasItem data that is parsed and applied to the canvas item. 
+        """
         super().__init__(parent, canvasItemData)
 
-        # Properties/Data
+        # Node Data
         self.imagePath = self.nodeData["imagePath"]
-        self.imageSize = QSize()
 
+        # Properties
+        self.imageSize = QSize()
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
 
-        # Initiation 
-        self.setImage(self.imagePath)
+        # INIT 
+        self.pixmapItem.setPixmap(self.getImage(self.imagePath))    # Set Image to self.pixmapItem
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
-    def setImage(self, path):
-        """Sets the image to self.pixmapItem"""
+    def getImage(self, path):
+        """ Returns the converted image from the path.
+            This is required to bypass a rendering error.
+        """
         image = self.loadImage(path)
 
         pixmap = QPixmap()
         pixmap.convertFromImage(image)
         self.imageSize = pixmap.size()
 
-        self.pixmapItem.setPixmap(pixmap) 
+        return pixmap
 
     def loadImage(self, path):
-        """Loads image if file exists"""
+        """ Loads image if file exists
+            If image does not exist, delete self.
+        """
         if Path(path).is_file():
             return ImageQt(path)
         else:
             ConsoleLog.alert("Image File does not exist.")
             self.deleteLater()
-
-
-    def isWithinBounds(self):   #! Move to main canvas
-        """Checks if self is within the bounds of the scene."""
-
-        boundingRect = self.sceneBoundingRect()
-        sceneRect = self.mainCanvas.scene().sceneRect()
-
-        if boundingRect.topLeft().x() < sceneRect.topLeft().x():
-            return False
-        elif boundingRect.topLeft().y() < sceneRect.topLeft().y():
-            return False
-        elif boundingRect.bottomRight().x() > sceneRect.bottomRight().x():
-            return False
-        elif boundingRect.bottomRight().y() > sceneRect.bottomRight().y():
-            return False
-        
-        return True
-
-    def isLandscape(self, size: QSizeF):
-        """If the width is longer than height, return true. If portrait, return false"""
-        return size.width() > size.height()

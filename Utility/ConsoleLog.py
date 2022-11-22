@@ -1,3 +1,10 @@
+"""
+Description: This python file provides console logging functionality.  
+
+Date Created: 10/18/22 
+Date Updated: 11/22/22
+"""
+
 from datetime import datetime
 from Settings.settings import *
 

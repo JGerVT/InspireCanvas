@@ -1,5 +1,5 @@
 """
-Description:    This python file is a Utility file that get's data from the JSON database.
+Description:  This python file is a Utility file that get's data from the JSON database.
 
 
 Date Created: 9/21/22 
