@@ -625,20 +625,38 @@ class NavButtons(QPushButton):
             imgLocation (str): location of the image used for the NavButton
         """
         super().__init__(parent=parent)
-        self.setObjectName("NavButton")
 
-        self.name = name
-
+        # Set Attributes
+        self.setObjectName(name)
         self.setFixedSize(NavButtonWidth,parent.height())
         self.setFixedWidth(NavButtonWidth)
-        imageSize = QSize(11,11)
-
         self.setCursor(QCursor(Qt.PointingHandCursor))
+
+        # Properties
+        self.name = name
+        imageSize = QSize(11,11)
 
         # Images
         self.pixmap = QPixmap(QIcon(imgLocation).pixmap(imageSize))
         self.pixmap.scaled(imageSize.width(), imageSize.height(), Qt.KeepAspectRatio)
         self.setIcon(self.pixmap)
+
+        # Init
+        self.SetStyleSheet()
+
+    def SetStyleSheet(self):
+        self.setStyleSheet("""
+            QPushButton#minimizeWindow:hover{
+                background-color: rgba(255,255,255,40);          
+            }
+            QPushButton#maximizeWindow:hover{
+                background-color: rgba(255,255,255,40);                       
+            }
+            QPushButton#closeWindow:hover{
+                background-color: rgba(255,0,0,200);            
+            }
+        """)
+
 
     #Click mouse button
     def mouseReleaseEvent(self, e) -> None:
