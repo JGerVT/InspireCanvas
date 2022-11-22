@@ -31,13 +31,21 @@ class FileCanvasItem(CanvasItem):
         self.fileName = self.GetFileName(self.filePath)
         self.fileIcon = self.GetFileIcon(self.fileName).pixmap(QSize(50,50),QIcon.Normal,QIcon.On)
 
-        # Icon
-        self.icon = QGraphicsPixmapItem(self)
-        self.scaled = QPixmap(self.fileIcon).scaled(50,50,Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        self.icon.setPixmap(self.scaled)
-        self.icon.setPos(12, self.boundingRect().height()/2 - self.icon.boundingRect().height()/2)
+        if CheckFileExists(self.filePath) and self.fileIcon != None and self.fileName != None:  # IF file path is valid, and successfully retrieves icon and filename
+            # Icon
+            self.icon = QGraphicsPixmapItem(self)
+            self.scaled = QPixmap(self.fileIcon).scaled(50,50,Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.icon.setPixmap(self.scaled)
+            self.icon.setPos(12, self.boundingRect().height()/2 - self.icon.boundingRect().height()/2)
 
-        ConsoleLog.log("Added FileCanvasItem", "Successfully added File. canvasItem: " + str(self.canvasItemData) + " filePath: " + self.filePath) 
+            ConsoleLog.log("Added FileCanvasItem", "Successfully added File. canvasItem: " + str(self.canvasItemData) + " filePath: " + self.filePath) 
+        else:
+            ConsoleLog.error("Unable to add ImageCanvasItem", "imagePath is invalid: "  + str(self.canvasItemData) + " filePath: " + self.filePath) 
+           
+            del self.canvasItemData
+            del self.nodeData
+            self.deleteLater()
+
 
 
     def paint(self, painter, option, widget) -> None:
@@ -78,7 +86,6 @@ class FileCanvasItem(CanvasItem):
             return icon
         except:
             ConsoleLog.error("Unable to access File Icon", str(filePath) + " - This path does not have a valid icon.")
-            self.deleteLater()
             return None        
 
     def GetFileName(self, filePath):
@@ -94,4 +101,7 @@ class FileCanvasItem(CanvasItem):
             Input:  E:\TestFiles\example.txt
             Return: example.txt
         """
-        return os.path.basename(filePath)
+        try:
+            return os.path.basename(filePath)
+        except:
+            return None

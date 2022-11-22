@@ -39,7 +39,8 @@ def GetFileType(string:str):
     split_tup = os.path.splitext(string)
     return  split_tup[1]
 
-
+def CheckFileExists(filePath:str):
+    return os.path.exists(filePath)
 
 def openFile(file):
     if sys.platform == 'linux2':

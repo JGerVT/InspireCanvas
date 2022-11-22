@@ -29,22 +29,38 @@ class ImageCanvasItem(CanvasItem):
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
 
         # INIT 
-        self.pixmapItem.setPixmap(self.getImage(self.imagePath))    # Set Image to self.pixmapItem
-        self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
+        image = self.getImage(self.imagePath)
+        if image != None:
+            self.pixmapItem.setPixmap(self.getImage(self.imagePath))    # Set Image to self.pixmapItem
+            self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
-        ConsoleLog.log("Added ImageCanvasItem", "Successfully added Image. canvasItem: " + str(self.canvasItemData) + "  imagePath: " + self.imagePath) 
+            ConsoleLog.log("Added ImageCanvasItem", "Successfully added Image. canvasItem: " + str(self.canvasItemData) + "  imagePath: " + self.imagePath) 
+
+        else:
+            ConsoleLog.error("Unable to add ImageCanvasItem", "imagePath is invalid: " + str(self.canvasItemData) + "  imagePath: " + str(self.imagePath)) 
+            
+            del self.nodeData   # If unable to create image, delete self and data
+            del self.canvasItemData
+            self.deleteLater()
+
+
 
     def getImage(self, path):
         """ Returns the converted image from the path.
             This is required to bypass a rendering error.
         """
-        image = self.loadImage(path)
+        if CheckFileExists(path): # If image does not exist, delete self.
+            try:
+                image = self.loadImage(path)
 
-        pixmap = QPixmap()
-        pixmap.convertFromImage(image)
-        self.imageSize = pixmap.size()
-
-        return pixmap
+                pixmap = QPixmap()
+                pixmap.convertFromImage(image)
+                self.imageSize = pixmap.size()
+                return pixmap
+            except:
+                return None
+        else:
+            return None 
 
     def loadImage(self, path):
         """ Loads image if file exists
