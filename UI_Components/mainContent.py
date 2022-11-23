@@ -153,7 +153,7 @@ class MainContent(QWidget):
             # Paint Text
             painter.setPen(QColor(255, 255, 255, 180))
             painter.setFont(QFont(fontFamily, 13))
-            painter.drawText(0, topBarHeight, self.canvas.rect().width(), self.canvas.rect().height(), Qt.AlignCenter, "Drag in file or right-click to add item") # This sets the position and sets the text when no canvas items are present
+            painter.drawText(0, topBarHeight, self.canvas.rect().width(), self.canvas.rect().height(), Qt.AlignCenter, "Drag in file or right-click to add canvas item") # This sets the position and sets the text when no canvas items are present
 
 
         return super().paintEvent(event)

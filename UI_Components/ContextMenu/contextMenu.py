@@ -68,11 +68,11 @@ def CanvasItemContextMenu(self, event):
             i = 0
             for filePath in imageFiles[0]:
                 position = clickPos + QPointF(10*i, 10*i)
-                self.NewImageCanvasItem(filePath, position)
+                self.NewImageCanvasItem(filePath, position, centerOnPos = True)
                 i += 1
 
     elif action == insertText:          # Insert Text CanvasItem
-        self.NewTextCanvasItem("Text", clickPos, 1)
+        self.NewTextCanvasItem("Text", clickPos, 1, centerOnPos = True)
 
     elif action == insertFile:          # Insert File CanvasItem
         files = QFileDialog.getOpenFileNames(self,"Select Files",".")
@@ -81,7 +81,7 @@ def CanvasItemContextMenu(self, event):
             i = 0
             for filePath in files[0]:
                 position = clickPos + QPointF(10*i, 10*i)
-                self.NewFileCanvasItem(filePath, position)
+                self.NewFileCanvasItem(filePath, position, centerOnPos = True)
                 i += 1
 
     elif action == saveProject:         # Save Project

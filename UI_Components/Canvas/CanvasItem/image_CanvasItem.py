@@ -27,6 +27,7 @@ class ImageCanvasItem(CanvasItem):
         # Properties
         self.imageSize = QSize()
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
+        self.pixmapItem.setCacheMode(self.cacheMode().DeviceCoordinateCache)
 
         # INIT 
         image = self.getImage(self.imagePath)
@@ -42,8 +43,6 @@ class ImageCanvasItem(CanvasItem):
             del self.nodeData   # If unable to create image, delete self and data
             del self.canvasItemData
             self.deleteLater()
-
-
 
     def getImage(self, path):
         """ Returns the converted image from the path.
@@ -66,7 +65,7 @@ class ImageCanvasItem(CanvasItem):
         """ Loads image if file exists
             If image does not exist, delete self.
         """
-        if Path(path).is_file():
+        if CheckFileExists(path):
             return ImageQt(path)
         else:
             ConsoleLog.alert("Image File does not exist.")
