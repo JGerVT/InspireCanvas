@@ -4,3 +4,4 @@ Data/defaultDatabase.json
 Data/stressTest.json
 Build
 Resources/Test Images
+.gitignore
