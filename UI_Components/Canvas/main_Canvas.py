@@ -41,9 +41,9 @@ class MainCanvas(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.setCacheMode(QGraphicsView.CacheBackground)                    # Used to improve performance
+        # self.setCacheMode(QGraphicsView.CacheBackground)                    # Used to improve performance
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
-        self.setRenderHint(QPainter.Antialiasing, False)
+        self.setRenderHint(QPainter.Antialiasing, True)
         self.setFrameStyle(0)
 
         # _____ References _____
@@ -609,9 +609,9 @@ class MainCanvas(QGraphicsView):
         
         if len(self.canvasItems) > 0:  # If there are items on the canvas, allow zoom
             if event.angleDelta().y() < 0:
-                self.AddSubtractZoom(-.1)
+                self.AddSubtractZoom(-.25)
             else:
-                self.AddSubtractZoom(.1)
+                self.AddSubtractZoom(.25)
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene

@@ -28,6 +28,7 @@ class ImageCanvasItem(CanvasItem):
         self.imageSize = QSize()
         self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
         self.pixmapItem.setCacheMode(self.cacheMode().DeviceCoordinateCache)
+        self.pixmapItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
         # INIT 
         image = self.getImage(self.imagePath)
