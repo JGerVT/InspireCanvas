@@ -26,24 +26,35 @@ class ImageCanvasItem(CanvasItem):
 
         # Properties
         self.imageSize = QSize()
-        self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
-        self.pixmapItem.setCacheMode(self.cacheMode().DeviceCoordinateCache)
-        self.pixmapItem.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
 
         # INIT 
-        image = self.getImage(self.imagePath)
-        if image != None:
-            self.pixmapItem.setPixmap(self.getImage(self.imagePath))    # Set Image to self.pixmapItem
-            self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
+        self.image = self.getImage(self.imagePath)
+        self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
-            ConsoleLog.log("Added ImageCanvasItem", "Successfully added Image. canvasItem: " + str(self.canvasItemData) + "  imagePath: " + self.imagePath) 
-
-        else:
+        if self.image == None:
             ConsoleLog.error("Unable to add ImageCanvasItem", "imagePath is invalid: " + str(self.canvasItemData) + "  imagePath: " + str(self.imagePath)) 
             
             del self.nodeData   # If unable to create image, delete self and data
             del self.canvasItemData
             self.deleteLater()
+
+
+    def paint(self, painter, option, widget) -> None:
+
+        painter.save()
+
+        painter.setRenderHint(QPainter.Antialiasing,True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform,True)
+        painter.setRenderHint(QPainter.LosslessImageRendering,True)
+
+        painter.setClipRect(self.mapFromScene(self.mainCanvas.GetVisibleScreenRect()).boundingRect())
+
+        painter.drawImage(self.image.rect(), self.image, self.image.rect())
+
+        painter.restore()
+
+        return super().paint(painter, option, widget)
+
 
     def getImage(self, path):
         """ Returns the converted image from the path.
@@ -51,23 +62,11 @@ class ImageCanvasItem(CanvasItem):
         """
         if CheckFileExists(path): # If image does not exist, delete self.
             try:
-                image = self.loadImage(path)
-
-                pixmap = QPixmap()
-                pixmap.convertFromImage(image)
+                pixmap = QImage()
+                pixmap.load(path)
                 self.imageSize = pixmap.size()
                 return pixmap
             except:
                 return None
         else:
             return None 
-
-    def loadImage(self, path):
-        """ Loads image if file exists
-            If image does not exist, delete self.
-        """
-        if CheckFileExists(path):
-            return ImageQt(path)
-        else:
-            ConsoleLog.alert("Image File does not exist.")
-            self.deleteLater()

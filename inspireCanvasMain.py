@@ -143,8 +143,6 @@ class MainWindow(QMainWindow):
 
 # Execute software.
 if __name__ == "__main__":
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True) #enable highdpi scaling
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
     app = QApplication(sys.argv)
 
     window = MainWindow()
