@@ -303,17 +303,19 @@ class TabContainer(QWidget):
             tabWidget.deleteLater()
 
             if index < self.GetNumberOfTabs() - 1: # If tab is not last in tab container
-                nextTab = self.GetTab(index + 1)
+                nextTab = self.GetTab(self.hBoxLayout.itemAt(index + 1).widget().tabID)
             if index - 1 >= 0:                  # If tab is not first in tab container
-                prevTab = self.GetTab(index - 1)
+                prevTab = self.GetTab(self.hBoxLayout.itemAt(index - 1).widget().tabID)
 
             # Set Selection
-            if self.selectedTabWidget == tabWidget:
-                if nextTab != None:
+            if self.selectedTabWidget == tabWidget: # If selected tab is deleted tab.
+                if nextTab != None:                 # If next tab exists set selection to next tab
                     self.SetSelectedWidget(nextTab)
-                else:
+                    print("nextTab",nextTab)
+                else:                               # If next tab does not exist, set to previous tab.
                     self.SetSelectedWidget(prevTab)
-            else:
+                    print("prevTab",prevTab)
+            else:                                   # If selected tab is not deleted tab, set selection to selection.
                 self.SetSelectedWidget(self.selectedTabWidget)
             
             return True
@@ -361,6 +363,9 @@ class TabContainer(QWidget):
 
     def getIndex(self, widget):
         return self.hBoxLayout.indexOf(widget)
+
+    def getWidgetID(self, widget):
+        return widget.tabID
 
     def GetNumberOfTabs(self):
         return self.hBoxLayout.count()
@@ -545,6 +550,7 @@ class Tab(QWidget):
 
     def SaveTabText(self, text):
         self.tabContainer.mainTopBar.tabHashTable[self.tabID]["tabName"] = text
+        self.name = text
 
 
 class TabText(QLineEdit):

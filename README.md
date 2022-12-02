@@ -5,7 +5,7 @@ Inspire Canvas is a PySide6 application that enables Images, Text, and Files to 
 
 
 ## Installation 
-This was only tested on a Windows 10 computer
+**This was only tested on a Windows 10 computer**
 
 To develop Inspire Canvas, Python 3.9.5 and all project dependencies will need to be installed on the developer’s computer. Inspire Canvas uses the following Python dependencies:
 ```
