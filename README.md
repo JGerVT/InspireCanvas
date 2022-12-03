@@ -70,7 +70,7 @@ Once the development setup has been finished, the software can be deployed. To d
     ```
 2.	Open a terminal and change the directory to Inspire Canvas root folder. Run the following command:
     ```
-    pyinstaller --noconfirm --onedir --windowed --name "Inspire Canvas" --icon "Resources/inspireCanvasIcon.png" --add-data "Data;Data/" --add-data "Settings;Settings/" --add-data "Resources;Resources/"  "inspireCanvasMain.py"
+    pyinstaller "Inspire Canvas.spec"
     ```
     This command will compile the project to an executable file, located in:
     ```
