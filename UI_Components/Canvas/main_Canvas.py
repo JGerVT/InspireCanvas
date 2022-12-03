@@ -598,7 +598,6 @@ class MainCanvas(QGraphicsView):
 
         self.unsetCursor()
 
-
         return super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event):

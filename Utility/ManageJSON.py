@@ -11,6 +11,7 @@ import json
 from jsonschema import validate, exceptions
 from os import path
 from time import time
+from collections import OrderedDict
 
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -64,7 +65,7 @@ def GetSelectedTab(JSONObj):
 
 def LoadTabs(JSONObj):
     """Creates a dictionary of all tabs in the JSON Object"""
-    tabDict = dict()
+    tabDict = OrderedDict()
     for data in JSONObj["tabs"]:
         tabDict[data["tabID"]] = data
     return tabDict

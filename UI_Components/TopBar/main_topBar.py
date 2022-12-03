@@ -254,9 +254,11 @@ class TabContainer(QWidget):
         newID = GenerateID()
         tabName = tabWidget.name
         tabColor = tabWidget.color
+        viewportPos = copy.deepcopy(self.mainTopBar.tabHashTable[tabWidget.tabID]["viewportPos"])
+        viewportZoom = copy.deepcopy(self.mainTopBar.tabHashTable[tabWidget.tabID]["viewportZoom"])
         canvasItems = copy.deepcopy(self.mainTopBar.tabHashTable[tabWidget.tabID]["canvasItems"])
 
-        tabData = CreateTabData(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems) 
+        tabData = CreateTabData(tabName=tabName, tabColor=tabColor, tabID = newID, canvasItems=canvasItems, viewportPos= viewportPos, viewportZoom=viewportZoom) 
         self.mainTopBar.tabHashTable[newID] = tabData
         newTab = self.AddTab(newID, tabName, setSelected = False)
 
@@ -311,10 +313,8 @@ class TabContainer(QWidget):
             if self.selectedTabWidget == tabWidget: # If selected tab is deleted tab.
                 if nextTab != None:                 # If next tab exists set selection to next tab
                     self.SetSelectedWidget(nextTab)
-                    print("nextTab",nextTab)
                 else:                               # If next tab does not exist, set to previous tab.
                     self.SetSelectedWidget(prevTab)
-                    print("prevTab",prevTab)
             else:                                   # If selected tab is not deleted tab, set selection to selection.
                 self.SetSelectedWidget(self.selectedTabWidget)
             
@@ -391,6 +391,18 @@ class TabContainer(QWidget):
         elif eventPos.x() < prevPos and index > 0:
             self.hBoxLayout.removeWidget(tabWidget)
             self.hBoxLayout.insertWidget(index - 1, tabWidget)
+
+    # https://stackoverflow.com/a/36529204
+    def SetTabOrder(self):
+        """Set the tab order data to the current tab order.
+        """
+        new_dict = OrderedDict()
+        for index in range(self.GetNumberOfTabs()):
+            widget = self.hBoxLayout.itemAt(index).widget()
+            new_dict[widget.tabID] = self.mainTopBar.tabHashTable[widget.tabID]
+
+        self.mainTopBar.tabHashTable = new_dict
+        self.mainTopBar.MainContent.tabHashTable = new_dict
 
     def GetCopy(self):
         return self.mainTopBar.GetCopy()
@@ -503,17 +515,19 @@ class Tab(QWidget):
     # ----- Events -----
     def deleteButtonClicked(self):
         self.tabContainer.DeleteTab(self)
-        pass
 
     # Click on tab to select tab
     def mousePressEvent(self, event):
         
         if event.button() == Qt.MouseButton.RightButton:
             TabBarContextMenu(self, event)
-            return
+            return True
         elif event.button() == Qt.MouseButton.LeftButton:
-            self.parent().SetSelectedWidget(self)
+            self.tabContainer.SetSelectedWidget(self)
             self.setFocus()
+            return True
+        elif event.button() == Qt.MouseButton.MiddleButton:
+            self.tabContainer.DeleteTab(self)
             return True
         return super().mousePressEvent(event)
 
@@ -528,6 +542,10 @@ class Tab(QWidget):
             self.tabContainer.moveTab(self, self.mapToParent(event.pos()))
             return True
         return super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        self.tabContainer.SetTabOrder()
+        return super().mouseReleaseEvent(event)
 
     def eventFilter(self, watched, event) -> bool:
         if event.type() == QEvent.Enter: # Show/hide delete button when tab is hovered over

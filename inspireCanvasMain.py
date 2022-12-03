@@ -32,7 +32,6 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # Set Attributes
-        self.SetStyleSheet("Settings\style.qss")
         self.setWindowTitle("Inspire Canvas")
         self.setWindowIcon(QIcon(softwareIconLocation))
         self.resize(startingWindowSize[0], startingWindowSize[1])   # Set default window size to window size set in settings
@@ -62,17 +61,6 @@ class MainWindow(QMainWindow):
         # Central Widget
         self.mainContent = MainContent(self)
         self.setCentralWidget(self.mainContent)
-
-    def SetStyleSheet(self, styleLocation):
-        '''Load QSS Theme and set as MainWindow stylesheet
-
-        Args:
-            styleLocation (string): the .qss file location to be set as the MainWindow stylesheet
-        '''
-        with open(styleLocation, 'r') as f:
-            style = f.read()
-            
-            self.setStyleSheet(style)
 
     # Grips and Side grips
     def resizeEvent(self, event):
