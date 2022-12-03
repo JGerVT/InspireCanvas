@@ -1,5 +1,5 @@
 """
-Description:    This python file is a Utility file that get's data from the JSON database.
+Description:  This python file is a Utility file that get's data from the JSON database.
 
 
 Date Created: 9/21/22 
@@ -11,6 +11,7 @@ import json
 from jsonschema import validate, exceptions
 from os import path
 from time import time
+from collections import OrderedDict
 
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -64,7 +65,7 @@ def GetSelectedTab(JSONObj):
 
 def LoadTabs(JSONObj):
     """Creates a dictionary of all tabs in the JSON Object"""
-    tabDict = dict()
+    tabDict = OrderedDict()
     for data in JSONObj["tabs"]:
         tabDict[data["tabID"]] = data
     return tabDict
@@ -155,7 +156,7 @@ def CreateImageData(imagePath, nodeName = "Image_Node"):
         return node
 
     else:
-        print("CreateImageNode: Invalid Path")
+        ConsoleLog.error("CreateFileNode: Invalid Path", str(imagePath) + " does not exist.")
         raise Exception("CreateImageNode: Invalid Path")
 
 def CreateTextData(text, nodeName = "Text_Node"):
@@ -177,6 +178,34 @@ def CreateTextData(text, nodeName = "Text_Node"):
         "nodeText": text
     }
     return node
+
+def CreateFileData(filePath, nodeName = "File_Node"):
+    """Create data for a new file
+
+    Args:
+        filePath (_type_): path to the file
+        nodeName (str, optional): name of the node. Defaults to "File_Node".
+
+    Raises:
+        Exception: If the path does not exist, it will not create the data.
+
+    Returns:
+        dict: returns a dictionary of nodeType, nodeName, nodeID,  creationTime, and filePath
+    """
+    if path.exists(filePath):
+        node = {
+            "nodeType": "File_Node",
+            "nodeName": nodeName,
+            "nodeID": GenerateID(),
+            "creationTime": round(time()),
+            "canvasItemReferences": [],
+            "filePath": filePath
+        }
+        return node
+
+    else:
+        ConsoleLog.error("CreateFileNode: Invalid Path", str(filePath) + " does not exist.")
+        raise Exception("CreateImageNode: Invalid Path")
 
 
 def NewProjectData(projectName, selectedTab, canvasSize, tabs, nodes):

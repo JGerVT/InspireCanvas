@@ -1,60 +1,68 @@
-#Imports
-from pathlib import Path
-from PIL.ImageQt import ImageQt
+""" 
+Description:  This python file provides the functionality for ImageCanvasItems on the Canvas
+
+Date Created: 10/18/22 
+Date Updated: 11/22/22
+"""
 
 #Components Used:
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *  
 
 class ImageCanvasItem(CanvasItem):
     def __init__(self, parent, canvasItemData) -> None:
+        """ Provides the functionality for Image Canvas Items
+
+        Args:
+            canvasItemData (dict): CanvasItem data that is parsed and applied to the canvas item. 
+        """
         super().__init__(parent, canvasItemData)
 
-        # Properties/Data
+        # Node Data
         self.imagePath = self.nodeData["imagePath"]
+
+        # Properties
         self.imageSize = QSize()
 
-        self.pixmapItem = QGraphicsPixmapItem(parent=self)  # Image Data
-
-        # Initiation 
-        self.setImage(self.imagePath)
+        # INIT 
+        self.image = self.getImage(self.imagePath)
         self.SetRect(QRectF(QPointF(self.itemPos.x(),self.itemPos.y()), QSize(self.imageSize.width(), self.imageSize.height())))
 
-    def setImage(self, path):
-        """Sets the image to self.pixmapItem"""
-        image = self.loadImage(path)
-
-        pixmap = QPixmap()
-        pixmap.convertFromImage(image)
-        self.imageSize = pixmap.size()
-
-        self.pixmapItem.setPixmap(pixmap) 
-
-    def loadImage(self, path):
-        """Loads image if file exists"""
-        if Path(path).is_file():
-            return ImageQt(path)
-        else:
-            ConsoleLog.alert("Image File does not exist.")
+        if self.image == None:
+            ConsoleLog.error("Unable to add ImageCanvasItem", "imagePath is invalid: " + str(self.canvasItemData) + "  imagePath: " + str(self.imagePath)) 
+            
+            del self.nodeData   # If unable to create image, delete self and data
+            del self.canvasItemData
             self.deleteLater()
 
 
-    def isWithinBounds(self):   #! Move to main canvas
-        """Checks if self is within the bounds of the scene."""
+    def paint(self, painter, option, widget) -> None:
 
-        boundingRect = self.sceneBoundingRect()
-        sceneRect = self.mainCanvas.scene().sceneRect()
+        painter.save()
 
-        if boundingRect.topLeft().x() < sceneRect.topLeft().x():
-            return False
-        elif boundingRect.topLeft().y() < sceneRect.topLeft().y():
-            return False
-        elif boundingRect.bottomRight().x() > sceneRect.bottomRight().x():
-            return False
-        elif boundingRect.bottomRight().y() > sceneRect.bottomRight().y():
-            return False
-        
-        return True
+        painter.setRenderHint(QPainter.Antialiasing,True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform,True)
+        painter.setRenderHint(QPainter.LosslessImageRendering,True)
 
-    def isLandscape(self, size: QSizeF):
-        """If the width is longer than height, return true. If portrait, return false"""
-        return size.width() > size.height()
+        painter.setClipRect(self.mapFromScene(self.mainCanvas.GetVisibleScreenRect()).boundingRect())
+
+        painter.drawImage(self.image.rect(), self.image, self.image.rect())
+
+        painter.restore()
+
+        return super().paint(painter, option, widget)
+
+
+    def getImage(self, path):
+        """ Returns the converted image from the path.
+            This is required to bypass a rendering error.
+        """
+        if CheckFileExists(path): # If image does not exist, delete self.
+            try:
+                pixmap = QImage()
+                pixmap.load(path)
+                self.imageSize = pixmap.size()
+                return pixmap
+            except:
+                return None
+        else:
+            return None 

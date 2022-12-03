@@ -1,8 +1,8 @@
 """
-Description:  This file provides the Text Item Canvas Node, which displays text to the Canvas 
+Description:  This python file provides the functionality for Text CanvasItems on the Canvas 
 
 Date Created: 10/23/22 
-Date Updated: 10/23/22
+Date Updated: 11/22/22
 """
 
 #Components Used:
@@ -11,6 +11,11 @@ from UI_Components.Canvas.CanvasUtility.ItemGroup import ItemGroup
 
 class TextCanvasItem(CanvasItem):
     def __init__(self, parent, canvasItemData) -> None:
+        """ Provides the functionality for Text Canvas Items
+
+        Args:
+            canvasItemData (dict): CanvasItem data that is parsed and applied to the canvas item. 
+        """
         super().__init__(parent, canvasItemData)
 
         # Set Attributes
@@ -21,11 +26,13 @@ class TextCanvasItem(CanvasItem):
         self.canEdit = False
         self.nodeData = self.mainCanvas.GetNodeData(self.nodeID) # Get Data by checking database with id
 
-        # Data/Properties
+        # Node Data
         self.nodeText = self.nodeData["nodeText"]
 
-        # Init
+        # INIT
         self.text.setPlainText(self.nodeText)
+
+        ConsoleLog.log("Added TextCanvasItem", "Successfully added Text.  canvasItem: " + str(self.canvasItemData) + " text: " + self.nodeText) 
 
     # ----- Utility ----- 
     def isEditable(self):
@@ -110,7 +117,7 @@ class TextBox(QGraphicsTextItem):
 
     # ----- Events -----
     def ContentChanged(self):
-        """When content has changed, update the sizez of the parent"""
+        """When content has changed, update the size of the parent"""
         self.textCanvasItem.setSize(self.boundingRect().size())
         self.textCanvasItem.updateParentSize()
         self.textCanvasItem.mainCanvas.SetSelectionHighlightPos()

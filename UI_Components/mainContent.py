@@ -1,8 +1,8 @@
 """
-Description: This python file provides the top level and main structure of this PySide application.  
+Description: This python file provides the top level main structure of this application.  
 
 Date Created: 9/27/22 
-Date Updated: 10/15/22
+Date Updated: 11/22/22
 """
 
 # --Imports--
@@ -25,7 +25,7 @@ from UI_Components.ContextMenu.contextMenu import * # Needed for initialization
 class MainContent(QWidget):
     FinishedInitializing = Signal() # When software finishes initialization, emit this signal
     def __init__(self, parent) -> None:
-        """This class contains layout with TopBar and MainCanvas. Provides the main structure and layout of the application."""
+        """This class contains layout with TopBar and MainCanvas and provides the main structure and layout of the application."""
         super().__init__(parent)
 
         # Set Attributes
@@ -40,7 +40,7 @@ class MainContent(QWidget):
         self.nodeHashTable = None
         self.selectedTab = None
         self.canvasSize = None
-        self.saveLocation = u"E:\OneDrive\Software Development\Inspire Canvas - Fall 2022\Inspire Canvas - Applied Software Fall 2022\Data\defaultDatabase.json"
+        self.saveLocation = u""     # Currently loaded project JSON location
 
         # Elements
         self.topBar = MainTopBar(self, projectName = self.projectName)  # Top Bar 
@@ -54,8 +54,8 @@ class MainContent(QWidget):
         LayoutRemoveSpacing(vLayout)
 
         # INIT
-        #! Load settings before loading project
-        self.LoadProject(self.saveLocation)
+        tabID = GenerateID()
+        self.LoadProject(JSONData = NewProjectData("Project", tabID, [100000,100000], [CreateTabData("Tab", tabID, [])], [])["Project"])
 
         # Signals
         self.FinishedInitializing.emit()    # Emit signal when main content has finished initialization
@@ -117,6 +117,8 @@ class MainContent(QWidget):
             self.JSONData["selectedTab"] = tabID
 
     def UpdateJSONData(self):
+        """Update JSONData with both node and tab HashTables
+        """
         dictList = []
         for key, value in self.nodeHashTable.items():
             dictList.append(value)
@@ -151,7 +153,7 @@ class MainContent(QWidget):
             # Paint Text
             painter.setPen(QColor(255, 255, 255, 180))
             painter.setFont(QFont(fontFamily, 13))
-            painter.drawText(0, topBarHeight, self.canvas.rect().width(), self.canvas.rect().height(), Qt.AlignCenter, "Drag in file or right-click to add item") # This sets the position and sets the text when no canvas items are present
+            painter.drawText(0, topBarHeight, self.canvas.rect().width(), self.canvas.rect().height(), Qt.AlignCenter, "Drag in file or right-click to add canvas item") # This sets the position and sets the text when no canvas items are present
 
 
         return super().paintEvent(event)
@@ -164,6 +166,9 @@ class MainContent(QWidget):
 
 class ZoomButtons(QWidget):
     def __init__(self, parent) -> None:
+        """ Zoom buttons that display in the bottom left corner.
+            These buttons allow the user to set a zoom level, or click zoom-in / zoom-out buttons. 
+        """
         super().__init__(parent)
         
         # References

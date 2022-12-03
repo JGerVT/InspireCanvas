@@ -14,6 +14,7 @@ from Settings.settings import *
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *
 from UI_Components.Canvas.CanvasItem.image_CanvasItem import *
 from UI_Components.Canvas.CanvasItem.text_CanvasItem import TextCanvasItem
+from UI_Components.Canvas.CanvasItem.file_CanvasItem import FileCanvasItem
 from UI_Components.Canvas.CanvasUtility.SelectionHighlight import *
 from UI_Components.Canvas.CanvasUtility.ItemGroup import *
 from UI_Components.ContextMenu.contextMenu import *
@@ -40,9 +41,9 @@ class MainCanvas(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.setCacheMode(QGraphicsView.CacheBackground)                    # Used to improve performance
+        # self.setCacheMode(QGraphicsView.CacheBackground)                    # Used to improve performance
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
-        self.setRenderHint(QPainter.Antialiasing, False)
+        self.setRenderHint(QPainter.Antialiasing, True)
         self.setFrameStyle(0)
 
         # _____ References _____
@@ -114,6 +115,7 @@ class MainCanvas(QGraphicsView):
 
         self.SetCanvasItemCount()   # This is needed if no CanvasItems are present, otherwise it will not show the message
         self.StoreZoomAmt()
+
         
     # ----- ADD, REMOVE, and Copy CanvasItems -----
     def InsertCanvasItem(self, canvasItemData):
@@ -137,7 +139,10 @@ class MainCanvas(QGraphicsView):
             newCanvasItem = ImageCanvasItem(self, canvasItemData)
         elif nodeData["nodeType"] == "Text_Node":
             newCanvasItem = TextCanvasItem(self, canvasItemData)
+        elif nodeData["nodeType"] == "File_Node":
+            newCanvasItem = FileCanvasItem(self, canvasItemData)        
         else:   # If type is not valid, do not add to database.
+            ConsoleLog.error("Invalid Item Type", "[" + str(nodeData["nodeType"]) + "] is not a valid node type.")
             return None
 
         self.SetReference(canvasItemData["nodeID"], canvasItemData["canvasItemID"])  # Update Reference
@@ -174,8 +179,10 @@ class MainCanvas(QGraphicsView):
 
         self.tabData["canvasItems"].pop(self.tabData["canvasItems"].index(canvasItem.canvasItemData))   # Remove data from canvasItem Database
 
-        if self.RemoveReference(canvasItem.canvasItemData["nodeID"], canvasItem.canvasItemData["canvasItemID"]) == 0:   # If there are no more references to the item in the database, delete from database
-            del self.nodeHashTable[canvasItem.nodeID]
+        #* Removed due to bugs caused by deleting node. I.E. when the node is cut, this item will be deleted, removing it's reference for when it's pasted again.
+        # if self.RemoveReference(canvasItem.canvasItemData["nodeID"], canvasItem.canvasItemData["canvasItemID"]) == 0:   # If there are no more references to the item in the database, delete from database
+            # del self.nodeHashTable[canvasItem.nodeID]
+        self.RemoveReference(canvasItem.canvasItemData["nodeID"], canvasItem.canvasItemData["canvasItemID"])
 
         canvasItem.deleteLater()
         self.SetCanvasItemCount()
@@ -199,7 +206,7 @@ class MainCanvas(QGraphicsView):
 
     # Insert New CanvasItem
     #   New Image CanvasItem
-    def NewImageCanvasItem(self, imagePath: str, position: QPointF, scale = 1):
+    def NewImageCanvasItem(self, imagePath: str, position: QPointF, scale = 1, centerOnPos = False):
         """Create a new Image Canvas Item
 
         Args:
@@ -213,9 +220,18 @@ class MainCanvas(QGraphicsView):
         imageNodeData["canvasItemReferences"].append(canvasItemData["canvasItemID"])
 
         self.SetAllData(canvasItemData, imageNodeData)   # Set data to databases
-        self.InsertCanvasItem(canvasItemData)   # Insert text node
+        canvasItem = self.InsertCanvasItem(canvasItemData)   # Insert text node
+
+        if centerOnPos:
+            widthDiv2 = canvasItem.sceneBoundingRect().width()/2
+            heightDiv2 = canvasItem.sceneBoundingRect().height()/2
+            newLocation = QPointF(position.x() - widthDiv2, position.y() - heightDiv2)
+            canvasItem.setPos(newLocation)    # Move item to be centered on insert position
+
+        return canvasItem
+
     #   New Text CanvasItem
-    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1):
+    def NewTextCanvasItem(self, text: str, position: QPointF, scale = 1, nodeName = "Text_Node", centerOnPos = False):
         """ Create a new Text Canvas Item
 
         Args:
@@ -226,7 +242,7 @@ class MainCanvas(QGraphicsView):
         Returns:
             _type_: _description_
         """
-        textNodeData = CreateTextData(text)
+        textNodeData = CreateTextData(text, nodeName)
         newID = textNodeData["nodeID"]
         canvasItemData = CreateCIData(newID, position, scale)
 
@@ -234,8 +250,38 @@ class MainCanvas(QGraphicsView):
 
         canvasItem = self.InsertCanvasItem(canvasItemData)   # Insert text node
 
+        if centerOnPos:
+            widthDiv2 = canvasItem.sceneBoundingRect().width()/2
+            heightDiv2 = canvasItem.sceneBoundingRect().height()/2
+            newLocation = QPointF(position.x() - widthDiv2, position.y() - heightDiv2)
+            canvasItem.setPos(newLocation)    # Move item to be centered on insert position
+
         return canvasItem
     
+    def NewFileCanvasItem(self, filePath: str, position: QPointF, scale = 1, centerOnPos = False):
+        """Create a new File Canvas Item
+
+        Args:
+            filePath (str): path to the file
+
+        Returns:
+            CanvasItem: Returns the new Canvas Item
+        """
+        fileNodeData = CreateFileData(filePath)
+        canvasItemData = CreateCIData(fileNodeData["nodeID"], position, scale)
+        fileNodeData["canvasItemReferences"].append(canvasItemData["canvasItemID"])
+
+        self.SetAllData(canvasItemData, fileNodeData)   # Set data to databases
+        canvasItem = self.InsertCanvasItem(canvasItemData)   # Insert text node
+
+        if centerOnPos:
+            widthDiv2 = canvasItem.sceneBoundingRect().width()/2
+            heightDiv2 = canvasItem.sceneBoundingRect().height()/2
+            newLocation = QPointF(position.x() - widthDiv2, position.y() - heightDiv2)
+            canvasItem.setPos(newLocation)    # Move item to be centered on insert position
+
+        return canvasItem
+
     # ________________________________________
     
     # ----- Copy and Paste -----
@@ -247,17 +293,29 @@ class MainCanvas(QGraphicsView):
             nodeID = item.nodeID
             scale = item.GetScale()
             self.copyCanvasItemData.append({"offsetPos":offsetPos,
-                                            "containerScenePos": self.selectedItemGroup.sceneBoundingRect().topLeft(),
+                                            "containerSceneRect": self.selectedItemGroup.sceneBoundingRect(),
                                             "nodeID": nodeID,
                                             "scale": scale})
 
     def PasteSelection(self, clickPos:QPointF):
         self.RemoveAllSelected()
         for item in self.copyCanvasItemData:
-            newLocation = clickPos + item["offsetPos"]
+            # Center the paste location.
+            widthDiv2 = item["containerSceneRect"].width()/2
+            heightDiv2 = item["containerSceneRect"].height()/2
+            newLocation = QPointF(clickPos.x() - widthDiv2, clickPos.y() - heightDiv2) + item["offsetPos"]
 
-            item = self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
-            self.AddSelected(item)
+
+            # If not text node, duplicate node, else create new node of type text. This needs to be done so editing text does not overwrite previous text.
+            if self.nodeHashTable[item["nodeID"]]["nodeType"] != "Text_Node":   
+                newNode =  self.DuplicateCanvasItem(item["nodeID"], newLocation, item["scale"])
+                self.AddSelected(newNode)
+            else:
+                nodeName = self.nodeHashTable[item["nodeID"]]["nodeName"]
+                nodeText = self.nodeHashTable[item["nodeID"]]["nodeText"]
+                newNode = self.NewTextCanvasItem(nodeText, newLocation, item["scale"], nodeName = nodeName)   
+                self.AddSelected(newNode)
+
 
     # ________________________________________
 
@@ -304,13 +362,9 @@ class MainCanvas(QGraphicsView):
             self.nodeHashTable[nodeID]["canvasItemReferences"].append(canvasItemID)
 
 
-    def RemoveReference(self, nodeID, canvasItemID):
-        del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
-
+    def RemoveReference(self, nodeID, canvasItemID):    # Caused too many errors, so I am temporarily removing it.
         if canvasItemID in self.nodeHashTable[nodeID]["canvasItemReferences"]:
             del self.nodeHashTable[nodeID]["canvasItemReferences"][self.nodeHashTable[nodeID]["canvasItemReferences"].index(canvasItemID)]
-
-        print(self.nodeHashTable[nodeID]["canvasItemReferences"])
 
         return len(self.nodeHashTable[nodeID]["canvasItemReferences"])
 
@@ -429,11 +483,7 @@ class MainCanvas(QGraphicsView):
         # Save changes        
         self.StoreZoomAmt()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
-        # self.SetZoomScale(zoomAmt)
 
-
-    # def FormatCanvasItemWithinScene(self):    #! Implement outside of canvas item
-        """This function ensures that the canvas item stays within the bounds of the scene."""
 
     # _______________ Manage Selected Canvas Nodes _______________
     def SetSelected(self, canvasItem):
@@ -515,36 +565,38 @@ class MainCanvas(QGraphicsView):
         return super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        #Pan Scene
-        if event.buttons() == Qt.MouseButton.LeftButton:
-            if self.rubberBand.isVisible(): # Rubber Band Selector: If no item was clicked and rubber band is visible.
-                rubberBandRect = QRect(self.prevMousePos, event.pos()).normalized()
-                self.rubberBand.setGeometry(rubberBandRect)
-                selectedItems = self.items(rubberBandRect)
-                selectedItems = self.GetCanvasItemsFromList(selectedItems)
+        if len(self.canvasItems) > 0:  # If there are items on the canvas, the user can pan the scene
+            #Pan Scene
+            if event.buttons() == Qt.MouseButton.LeftButton:
+                if self.rubberBand.isVisible(): # Rubber Band Selector: If no item was clicked and rubber band is visible.
+                    rubberBandRect = QRect(self.prevMousePos, event.pos()).normalized()
+                    self.rubberBand.setGeometry(rubberBandRect)
+                    selectedItems = self.items(rubberBandRect)
+                    selectedItems = self.GetCanvasItemsFromList(selectedItems)
 
-                if self.prevSelectedItems != selectedItems:
-                    self.prevSelectedItems = selectedItems
-                    self.SetSelectedItems(selectedItems)
-                # pass
+                    if self.prevSelectedItems != selectedItems:
+                        self.prevSelectedItems = selectedItems
+                        self.SetSelectedItems(selectedItems)
+                    # pass
+                    return
+                else:
+                    return super().mouseMoveEvent(event)
+            elif event.buttons() == Qt.MiddleButton:
+                offset = self.prevMousePos - event.pos()
+                self.prevMousePos = event.pos()
+
+                self.verticalScrollBar().setValue(self.verticalScrollBar().value() + offset.y())
+                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + offset.x())
+                event.accept()
                 return
             else:
                 return super().mouseMoveEvent(event)
-        elif event.buttons() == Qt.MiddleButton:
-            offset = self.prevMousePos - event.pos()
-            self.prevMousePos = event.pos()
-
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() + offset.y())
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + offset.x())
-            event.accept()
-            return
-        else:
-            return super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
-        self.unsetCursor()
         self.tabData["viewportPos"] = [self.horizontalScrollBar().value(), self.verticalScrollBar().value()]
         self.rubberBand.hide()
+
+        self.unsetCursor()
 
         return super().mouseReleaseEvent(event)
 
@@ -553,10 +605,12 @@ class MainCanvas(QGraphicsView):
         
         Zooms in on mouse position on canvas. Code from: https://stackoverflow.com/a/41688654
         """
-        if event.angleDelta().y() < 0:
-            self.AddSubtractZoom(-.1)
-        else:
-            self.AddSubtractZoom(.1)
+        
+        if len(self.canvasItems) > 0:  # If there are items on the canvas, allow zoom
+            if event.angleDelta().y() < 0:
+                self.AddSubtractZoom(-.25)
+            else:
+                self.AddSubtractZoom(.25)
 
     def keyPressEvent(self, event) -> None:
         if event.key() == Qt.Key.Key_Right or event.key() == Qt.Key.Key_Left or event.key() == Qt.Key.Key_Up or event.key() == Qt.Key.Key_Down: # If arrow keys are pressed, disable default functionality and pass event directly to the scene
@@ -657,7 +711,7 @@ class MainScene (QGraphicsScene):
             return 
 
         #* Item under mouse on click
-        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.IsSelected()):
+        if (self.topWidgetUnderMouse != None and self.topWidgetUnderMouse.isEnabled() and not self.topWidgetUnderMouse.GetIsSelected()):
             if event.modifiers() and Qt.Modifier.SHIFT: # If Shift held, add item to selection
                 self.mainView.AddSelected(self.topWidgetUnderMouse)
                 self.canDrag = False
@@ -700,6 +754,13 @@ class MainScene (QGraphicsScene):
             except:
                 pass
             return
+
+        elif type(self.topWidgetUnderMouse) == FileCanvasItem and self.onlyOneCanvasItemSelected() != None:
+            try:
+                openFile(self.topWidgetUnderMouse.filePath)
+            except:
+                pass
+            return
         # return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event) -> None:
@@ -739,11 +800,13 @@ class MainScene (QGraphicsScene):
                     urlType = GetFileType(url.fileName()).lower()   
                     urlTemp = url.toLocalFile()
                     
-                    if urlType in imageFileTypes: # Is an image file type.
-                        self.mainView.NewImageCanvasItem(url.toLocalFile(), initPosition)
+                    if urlType in imageFileTypes: # Is URL an image file type.
+                        self.mainView.NewImageCanvasItem(url.toLocalFile(), initPosition, centerOnPos = True)
                         initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
 
-                    else: # Is a file type
+                    else: # Is URL a file type
+                        self.mainView.NewFileCanvasItem(url.toLocalFile(), initPosition, centerOnPos = True)
+                        initPosition += QPointF(10,10) # This offsets the dropped images by 10px x and y for each image dropped
                         print("Dropped File")
 
             elif event.mimeData().hasImage():
