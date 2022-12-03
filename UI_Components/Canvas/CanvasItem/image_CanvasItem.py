@@ -5,10 +5,6 @@ Date Created: 10/18/22
 Date Updated: 11/22/22
 """
 
-#Imports
-from pathlib import Path
-from PIL.ImageQt import ImageQt
-
 #Components Used:
 from UI_Components.Canvas.CanvasItem.baseCanvasItem import *  
 
