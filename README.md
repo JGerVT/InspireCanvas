@@ -1,68 +1,66 @@
 # Inspire Canvas
-Inspire Canvas is a PySide6 application that enables Images, Text, and Files to be placed, scaled, and moved anywhere on the 2D Canvas.
+Inspire Canvas is a PySide6 application with a minimal GUI that enables Images, Text, and Files to be placed, scaled, and moved anywhere on a 2D Canvas.
 
 ![inspirecanvas](https://i.imgur.com/YEH29Ei.png)
 
+```* This was only tested on a Windows 10 64bit computer *```
 
-## Installation 
-**This was only tested on a Windows 10 computer**
+## Developer Instructions 
 
-To develop Inspire Canvas, Python 3.9.5 and all project dependencies will need to be installed on the developer’s computer. Inspire Canvas uses the following Python dependencies:
+To develop Inspire Canvas, Python 3.9.5 and all project dependencies will need to be installed. 
+
+Inspire Canvas uses the following Python dependencies:
 ```
-•	PySide6==6.1.2
-
-•	jsonschema==3.2.0
-
-•	Pillow==8.2.0
+- PySide6==6.1.2
+- jsonschema==3.2.0
 ```
-Project Development Setup
+### Project Development Setup
 
-1.	Download the project as a ZIP file from the InspireCanvas Repository:
+1.	[Download or Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the Inspire Canvas Repository.
+
+2.	Download and install [Python 3.9.5](https://www.python.org/ftp/python/3.9.5/):  
     
-    https://github.com/JGerVT/InspireCanvas 
+    - Windows 64 bit: https://www.python.org/ftp/python/3.9.5/python-3.9.5-amd64.exe
+    - Windows 32 bit: https://www.python.org/ftp/python/3.9.5/python-3.9.5.exe  
 
-    Extract the files to any location.
+    **Verify that the correct version of Python has been installed by typing the following command in a terminal:**
+	```
+	python --version
+	```
+    This should return “Python 3.9.5”
 
+3.	Install PIP 
 
-2.	Python 3.9.5 is required to develop this software, which can be downloaded and installed here:  
-
-    https://www.python.org/ftp/python/3.9.5/  
-    
-    Windows 64 bit: https://www.python.org/ftp/python/3.9.5/python-3.9.5-amd64.exe
-    
-    Windows 32 bit: https://www.python.org/ftp/python/3.9.5/python-3.9.5.exe  
-
-    To verify that Python has been installed, open a terminal and type:
-    ```
-          python --version
-    ```
-    This should return “Python 3.9.5”.
-
-3.	Next, PIP will need to be set up to install the python dependencies. This is done by typing the following command in a terminal: 
+	PIP is required to install the python dependencies. This can be done with the following command:
     
     ```
     python -m ensurepip --upgrade
     ```
     
-    To verify that PIP has been installed correctly, open a terminal and type:
+    **Verify that PIP has been installed correctly, open a terminal and type:**
 
     ```
     pip --version
     ```
 
 
-4.	To install all dependencies, the GitHub repository contains a ‘requirements.txt’ file. This file is used to install all project’s dependencies. To install these dependencies, change the directory of the terminal to the Inspire Canvas root folder, then run the command: 
+4.	Install all dependencies. 
 
-    ```
-	pip install -r requirements.txt
-    ```
+	
+	The Github repository contains a ‘requirements.txt’ file. This file is used to install all project’s dependencies. 
+	
+	To install these dependencies, change the directory of the terminal to the Inspire Canvas root folder, then run the following command: 
 
-    This will install all required dependencies for the software. 
+	```
+	install -r requirements.txt
+	```
 
-To run the software, execute the .inspireCanvasMain.py python file.
+5. 	Execute the .inspireCanvasMain.py python file.
 
 ## Deployment
-Once the development setup has been finished, the software can be deployed. To deploy the software, [PyInstaller](https://pyinstaller.org/en/stable/) can be utilized to compile the python script to an executable file (.EXE). To accomplish this, the following steps will need to be taken. 
+Once the development setup has been finished, the software can be deployed as an executable file. To deploy the software, [PyInstaller](https://pyinstaller.org/en/stable/) can be utilized to compile the python script to an executable file (.EXE). The GitHub repository includes a ‘Inspire Canvas.spec’ file, which is used to tell PyInstaller how to compile the source code. 
+
+### Deploy Inspire Canvas
 
 1.	Install PyInstaller by running the following command:
     ```
@@ -72,10 +70,6 @@ Once the development setup has been finished, the software can be deployed. To d
     ```
     pyinstaller "Inspire Canvas.spec"
     ```
-    This command will compile the project to an executable file, located in:
-    ```
-  	/dist/Inspire Canvas/Inspire Canvas.exe
-    ```
-	
-Once these steps have been followed, the python project has successfully been deployed. 
-
+    This command will compile the project as an executable file, located in ```/dist/Inspire Canvas/Inspire Canvas.exe```
+    
+**Once these steps have been completed, the python project has successfully been deployed.**
