@@ -10,10 +10,9 @@ Inspire Canvas is a PySide6 application with a minimal GUI that enables Images, 
 To develop Inspire Canvas, Python 3.9.5 and all project dependencies will need to be installed. 
 
 Inspire Canvas uses the following Python dependencies:
-```
-- PySide6==6.1.2
-- jsonschema==3.2.0
-```
+- [PySide6==6.1.2](https://pypi.org/project/PySide6/6.1.2/)
+- [jsonschema==3.2.0](https://pypi.org/project/jsonschema/3.2.0/)
+
 ### Project Development Setup
 
 1.	[Download or Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the Inspire Canvas Repository.
@@ -46,15 +45,17 @@ Inspire Canvas uses the following Python dependencies:
 
 4.	Install all dependencies. 
 
-	
-	The Github repository contains a ‘requirements.txt’ file. This file is used to install all project’s dependencies. 
+	There are two required dependencies for this project. 
 	
 	To install these dependencies, change the directory of the terminal to the Inspire Canvas root folder, then run the following command: 
 
 	```
-	install -r requirements.txt
+	pip install PySide6==6.1.2
 	```
-
+	```
+	pip install jsonschema==3.2.0
+	```
+	
 5. 	Execute the .inspireCanvasMain.py python file.
 
 ## Deployment
