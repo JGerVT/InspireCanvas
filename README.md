@@ -25,7 +25,6 @@ Inspire Canvas uses the following Python dependencies:
 	```
 	python --version
 	```
-    This should return “Python 3.9.5”
 
 3.	Install PIP 
 
@@ -34,19 +33,10 @@ Inspire Canvas uses the following Python dependencies:
     ```
     python -m ensurepip --upgrade
     ```
-    
-    **Verify that PIP has been installed correctly, open a terminal and type:**
-
-    ```
-    pip --version
-    ```
-
-
+  
 4.	Install all dependencies. 
 
-	There are two required dependencies for this project. 
-	
-	To install these dependencies, change the directory of the terminal to the Inspire Canvas root folder, then run the following command: 
+	There are two required dependencies for this project. To install these dependencies, change the directory of the terminal to the Inspire Canvas root folder, then run the following command: 
 
 	```
 	pip install PySide6==6.1.2
