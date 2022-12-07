@@ -60,6 +60,26 @@ Once the development setup has been finished, the software can be deployed as an
     ```
     pyinstaller "Inspire Canvas.spec"
     ```
-    This command will compile the project as an executable file, located in ```/dist/Inspire Canvas/Inspire Canvas.exe```
+    This command will compile the project as an executable file, located in 
+    
+    ```/dist/Inspire Canvas/Inspire Canvas.exe```
     
 **Once these steps have been completed, the python project has successfully been deployed.**
+
+## Folder Structure
+```
+Inspire Canvas/
+| - Data/               // - Contains the softwareLog.log file for logging program actions
+| - Resources/		// - Where .svg icons and the software icon are stored.
+| - Settings/           // - Where global settings are stored, in “settings.py”. 
+| - Utility/            // - Contains various utility python scripts that are utilized globally throughout my application. 
+| - UIComponents/	// - Contains python code for GUI elements / PySide QWidgets.
+| | - Canvas/           // - Contains all GUI elements for the canvas
+| | | - CanvasItem      // - Contains all GUI python files for Canvas Items on the canvas.
+| | | - CanvasUtility	// - Contains utility python classes for grouping together canvas items and selecting canvas items.
+| | - ContextMenu/      // - Contains GUI elements for the context menu on right click.
+| | - TopBar/     	// - Contains all GUI elements for the software’s Tab Bar.
+| - Inspire Canvas.spec // - PyInstaller installation settings
+| - inspireCanvasMain.py// - Main python file to run the program.
+
+```
