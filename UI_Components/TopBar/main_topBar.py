@@ -81,6 +81,9 @@ class MainTopBar(QWidget):
         """
         self.copyTab = copy
 
+    def SetSelectedTab(self, tabID):
+        self.tabScrollbar.SetSelectedTab(tabID)
+
     # ------ Events ------
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.RightButton:
@@ -166,7 +169,9 @@ class TabScrollbar(QScrollArea):
     def wheelEvent(self, event):
         """This makes the scroll wheel scroll horizontally"""
         QApplication.sendEvent(self.horizontalScrollBar(), event)
-
+    
+    def SetSelectedTab(self, tabID):
+        self.TabContainer.SetSelectedTab(tabID)
 
 
 class TabContainer(QWidget):
@@ -410,6 +415,8 @@ class TabContainer(QWidget):
     def SetCopy(self, copy):
         self.mainTopBar.SetCopy(copy)
 
+    def SetSelectedTab(self, tabID):
+        self.SetSelectedWidget(self.GetTab(tabID))
 
 class Tab(QWidget):
     def __init__(self, parent, tabID, name = "Tab", color = "#23A0FF", mainContent = None)  -> None:

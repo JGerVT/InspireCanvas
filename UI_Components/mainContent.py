@@ -84,8 +84,9 @@ class MainContent(QWidget):
         # Initialize Tab Selection
         if self.selectedTab in self.tabHashTable:   # Set selected tab to the selectedTab ID.
             self.canvas.TabSelected(self.tabHashTable[self.selectedTab])
-        elif len(self.tabHashTable.items()) > 0:    # If selected tabID is not in database and items exist in tab database, set to 0
-            self.canvas.TabSelected(self.JSONData["tabs"][0]["tabID"])
+        elif len(self.tabHashTable.items()) > 0:    # If selected tabID is not in database and items exist in tab database, set to first tab
+            firstTabID = list(self.tabHashTable.items())[0][0]
+            self.topBar.SetSelectedTab(firstTabID)  
         else:
             ConsoleLog.error("Tab Missing", "Tab [" + str(self.selectedTab) + "] not found in 'tabs'.")
 
