@@ -1,5 +1,5 @@
 # Inspire Canvas
-Inspire Canvas is a PySide6 application with a minimal GUI that enables Images, Text, and Files to be placed, scaled, and moved anywhere on a 2D Canvas.
+Inspire Canvas is a PySide6-based application featuring a minimal graphical user interface that empowers users to effortlessly arrange, resize, and reposition Images, Text, and Files on a two-dimensional canvas.
 
 ![inspirecanvas](https://i.imgur.com/YEH29Ei.png)
 
